@@ -504,6 +504,161 @@ donde $\text{sinc}(x) = \frac{\sin(\pi x)}{\pi x}$ y $T_s = 1/f_s$ es el periodo
 
 ## Muestreo
 
+En el trabajo previo muestreaste una **única** senoide y descubriste el aliasing
+comparando dos frecuencias distintas con una misma $f_s$. Aquí damos un paso más:
+la señal tiene **dos componentes** y ahora es la **frecuencia de muestreo** lo que
+haremos variar. Cada componente sufre el aliasing por separado, de modo que una
+puede quedar bien muestreada mientras la otra se disfraza.
+
+Cuando $f_s$ no cumple el criterio de Nyquist, la frecuencia que **aparentan**
+tener las muestras (el *alias*) se obtiene plegando la frecuencia real sobre el
+intervalo $[0, f_s/2]$:
+$$ f_{alias} = \left| f - k\,f_s \right|, \qquad k = \operatorname{round}(f/f_s) $$
+
+:::{.ejercicio}
+Considera la señal
+$$ x(t) = \sin(2\pi\cdot 3\,t) + 0.5\,\sin(2\pi\cdot 11\,t) $$
+definida en el intervalo $[0, 1]$ s.
+
+**a)** ¿Cuál es su frecuencia máxima $f_{max}$? ¿Qué frecuencia de muestreo mínima
+exige el criterio de Nyquist?
+
+**b)** Dibuja la señal "continua" con 2000 puntos y superpón sus muestras para
+$f_s = \{40, 22, 15, 8\}$ Hz en una figura 2×2 (`plot` azul para la continua,
+`stem` rojo para las muestras, como en el trabajo previo). Usa el mismo `ylim` en
+los cuatro paneles para poder compararlos. Genera los cuatro casos con un bucle
+`for` recorriendo un vector de frecuencias de muestreo, **no** copiando el mismo
+código cuatro veces.
+
+**c)** Aplicando la fórmula del alias, completa esta tabla:
+
+| $f_s$ (Hz) | ¿Cumple Nyquist? | alias de la comp. de 3 Hz | alias de la comp. de 11 Hz |
+|:---:|:---:|:---:|:---:|
+| 40 | | | |
+| 22 | | | |
+| 15 | | | |
+| 8  | | | |
+
+**d)** Dos de los casos dan un resultado llamativo. Obsérvalos en tu figura y
+explícalos:
+
+- Con $f_s = 22$ Hz, ¿qué le ocurre a la componente de 11 Hz? Fíjate en dónde cae
+  esa frecuencia respecto de $f_s/2$. ¿Por qué el criterio se escribe
+  $f_s > 2f_{max}$ y no $f_s \ge 2f_{max}$?
+- Con $f_s = 8$ Hz, dibuja **encima de las muestras** la senoide
+  $1.5\,\sin(2\pi\cdot 3\,t)$. ¿Por qué pasa exactamente por todas ellas?
+:::
+
+:::{.solucion}
+
+**a)** Las componentes son de 3 Hz y 11 Hz, así que $f_{max} = 11$ Hz y Nyquist
+exige $f_s > 22$ Hz. De las cuatro frecuencias del enunciado, **solo 40 Hz cumple
+la condición**.
+
+**b)** Estas son las cuatro gráficas. Solo en el primer panel las muestras
+describen la señal original; en los otros tres han perdido información de forma
+irreversible.
+
+```{matlab}
+%| echo: false
+clear all; close all; clc;
+
+f1 = 3;   A1 = 1;              % primera componente
+f2 = 11;  A2 = 0.5;            % segunda componente
+fmax = max(f1, f2);            % frecuencia máxima de la señal
+fss  = [40, 22, 15, 8];        % frecuencias de muestreo a ensayar
+
+tc = linspace(0, 1, 2000);                     % tiempo "continuo"
+xc = A1*sin(2*pi*f1*tc) + A2*sin(2*pi*f2*tc);  % señal original
+
+for k = 1:length(fss)
+    fs = fss(k);
+    tn = 0:1/fs:1;                                 % instantes de muestreo
+    xn = A1*sin(2*pi*f1*tn) + A2*sin(2*pi*f2*tn);  % muestras
+
+    subplot(2, 2, k)
+    plot(tc, xc, 'b-', 'LineWidth', 1.2)           % señal continua
+    hold on
+    stem(tn, xn, 'r', 'filled', 'LineWidth', 1)    % sus muestras
+    hold off
+    title(sprintf('f_s = %d Hz', fs))
+    xlabel('t (s)'); ylabel('x')
+    ylim([-1.8 1.8]); grid on
+end
+```
+
+**c)** Aplicando $f_{alias} = |f - k f_s|$ con $k = \operatorname{round}(f/f_s)$:
+
+| $f_s$ (Hz) | ¿Cumple Nyquist? | alias de la comp. de 3 Hz | alias de la comp. de 11 Hz |
+|:---:|:---:|:---:|:---:|
+| 40 | sí ($40 > 22$) | 3 Hz | 11 Hz |
+| 22 | **no** ($22 = 22$) | 3 Hz | 11 Hz (justo en $f_s/2$) |
+| 15 | no | 3 Hz | 4 Hz (con la fase invertida) |
+| 8  | no | 3 Hz | **3 Hz** |
+
+La componente de 3 Hz nunca sufre aliasing: incluso con la $f_s$ más baja del
+ensayo se cumple $8 > 2\cdot 3$. Es la de 11 Hz la que se pliega, y lo hace en un
+sitio distinto en cada caso.
+
+**d) El caso $f_s = 22$ Hz.** La componente de 11 Hz cae **exactamente** en
+$f_s/2$, así que se muestrea dos veces por periodo. Como esos dos instantes son
+justo los pasos por cero del seno, todas sus muestras valen 0:
+$$ 0.5\,\sin\!\left(2\pi\cdot 11\cdot \frac{n}{22}\right) = 0.5\,\sin(\pi n) = 0
+\quad \text{para todo } n $$
+La componente **desaparece por completo** de las muestras: en el panel se ven solo
+los 3 Hz. Este es justamente el motivo de que el criterio sea una desigualdad
+**estricta**, $f_s > 2f_{max}$: muestrear justo al doble no basta, porque una
+senoide muestreada en sus pasos por cero es indistinguible de la señal nula. (Con
+otra fase inicial no se anularía, pero sí quedaría su amplitud alterada; el
+resultado sigue sin ser fiable.)
+
+**El caso $f_s = 8$ Hz.** El alias de la componente de 11 Hz es
+$|11 - 1\cdot 8| = 3$ Hz: **coincide con la frecuencia de la otra componente**. Y
+no solo coincide la frecuencia, también la fase, porque en los instantes de
+muestreo $t_n = n/8$
+$$ \sin\!\left(2\pi\cdot 11\cdot\frac{n}{8}\right)
+ = \sin\!\left(2\pi\cdot\frac{3n}{8} + 2\pi n\right)
+ = \sin\!\left(2\pi\cdot 3\cdot\frac{n}{8}\right) $$
+Las dos componentes se vuelven **la misma señal** para el muestreador y sus
+amplitudes se suman: $1 + 0.5 = 1.5$. Por eso las muestras caen exactamente sobre
+$1.5\sin(2\pi\cdot 3 t)$.
+
+```{matlab}
+%| echo: false
+clear all; close all; clc;
+
+f1 = 3;  A1 = 1;
+f2 = 11; A2 = 0.5;
+fs = 8;                                        % muestreo insuficiente
+
+tc = linspace(0, 1, 2000);
+xc = A1*sin(2*pi*f1*tc) + A2*sin(2*pi*f2*tc);  % señal original
+
+tn = 0:1/fs:1;
+xn = A1*sin(2*pi*f1*tn) + A2*sin(2*pi*f2*tn);  % muestras
+
+xalias = 1.5*sin(2*pi*f1*tc);                  % lo que "parece" la señal
+
+plot(tc, xc, 'b-', 'LineWidth', 1.2)
+hold on
+plot(tc, xalias, 'g-', 'LineWidth', 1.5)
+stem(tn, xn, 'r', 'filled', 'LineWidth', 1.2)
+hold off
+xlabel('t (s)'); ylabel('x')
+title('f_s = 8 Hz: las dos componentes se funden en una de 3 Hz')
+legend('x(t) original', '1.5 sin(2\pi 3t) (alias)', 'x[n] muestras', ...
+       'Location', 'best')
+ylim([-1.8 1.8]); grid on
+```
+
+Un conversor A/D que reciba esta señal muestreada a 8 Hz entregará unos números
+de los que es **imposible** recuperar la señal de partida: no hay ningún
+procesado posterior que separe de nuevo los 3 Hz de los 11 Hz. Es la razón de ser
+del **filtro anti-aliasing**: si antes de muestrear se elimina la componente de
+11 Hz, lo que se pierde se pierde de forma controlada y lo que queda es fiel.
+:::
+
+
 ## Cuantización
 
 

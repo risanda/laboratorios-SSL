@@ -16,3 +16,5 @@ lab*.quarto_ipynb*
 *.log
 *.out
 *.toc
+
+**/*.quarto_ipynb

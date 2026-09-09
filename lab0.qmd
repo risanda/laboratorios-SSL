@@ -15,8 +15,6 @@ Al terminar deberías ser capaz de:
 - Entender una idea central de la asignatura: **en un ordenador no existen las
   funciones continuas**; lo que vemos como una curva continua es en realidad un
   conjunto de puntos muy próximos unidos por segmentos rectos.
-- Muestrear una señal, representarla con `stem` y reconocer el fenómeno del
-  **aliasing**.
 
 # Instalación de Matlab
 

@@ -20,7 +20,7 @@ solapamientos o huecos.
 | **Título** | Introducción a MATLAB | Conversión A/D y D/A |
 | **Papel** | Prelab instrumental: la herramienta | Primer bloque de teoría aplicado |
 | **Formato** | Guía *follow-along* con ejercicios resueltos | Trabajo previo + trabajo de laboratorio |
-| **Ejercicios** | 14 (4 integrados + 10 propuestos), todos con solución | 11 (6 previo + 5 laboratorio) |
+| **Ejercicios** | 14 (4 integrados + 10 propuestos), todos con solución | 12 (6 previo + 6 laboratorio) |
 | **Prerrequisito** | Ninguno | Práctica 0 |
 | **Idea vertebradora** | En un ordenador no existen las funciones continuas | Toda señal digital pasa por muestrear, cuantizar y reconstruir |
 
@@ -243,26 +243,40 @@ Ejercicios del trabajo previo:
 
 ### Contenidos: trabajo de laboratorio
 
-**Muestreo** — sección presente en el índice pero **sin contenido**
-(ver [Huecos detectados](#huecos-detectados)).
+**Muestreo**
+
+- Señal **multicomponente**: cada componente sufre el aliasing por separado, así
+  que una puede quedar bien muestreada mientras la otra se pliega.
+- Fórmula del alias: $f_{alias} = |f - k f_s|$ con $k = \operatorname{round}(f/f_s)$.
+- Dos casos degenerados explotados a fondo: muestrear **justo** a $2f_{max}$
+  (la componente cae en $f_s/2$, sus muestras son todas nulas y desaparece — de ahí
+  que Nyquist sea una desigualdad **estricta**) y el **solapamiento de alias**
+  (dos componentes distintas producen muestras idénticas y sus amplitudes se suman).
+
+7. Muestrear $x(t)=\sin(2\pi 3t)+0.5\sin(2\pi 11 t)$ a
+   $f_s = \{40, 22, 15, 8\}$ Hz con un bucle `for` sobre una figura 2×2; predecir
+   los alias con la fórmula y rellenar una tabla; explicar los casos $f_s = 22$ Hz
+   (la componente de 11 Hz se anula) y $f_s = 8$ Hz (su alias cae en 3 Hz y se
+   funde con la otra componente, de modo que las muestras describen exactamente
+   $1.5\sin(2\pi 3t)$).
 
 **Cuantización**
 
-7. Comparativa **redondeo vs. truncamiento** sobre una senoide de 5 Hz en una
+8. Comparativa **redondeo vs. truncamiento** sobre una senoide de 5 Hz en una
    figura 2×2 (las dos señales cuantizadas arriba, sus dos errores abajo).
    Ejecución para $N = \{2,3,4\}$ y **tabla de resultados rellenada a mano**:
    bits, niveles, resolución, error máximo y SQNR. Es el ejercicio que convierte
    la regla de los 6 dB/bit en dato medido por el alumno.
-8. **Cuantización de audio real**: `[y,Fs] = audioread('p44100.wav')`, elección
+9. **Cuantización de audio real**: `[y,Fs] = audioread('p44100.wav')`, elección
    razonada del rango, escucha con `sound(yq, Fs)` para varios $N$ y correlación
    entre calidad perceptual y SQNR.
 
 **Reconstrucción**
 
-9. Implementar `interp_ideal(xn, tn, tc)` completando un esqueleto: obtener $T_s$
+10. Implementar `interp_ideal(xn, tn, tc)` completando un esqueleto: obtener $T_s$
    de `tn(2)-tn(1)` y escribir el sumatorio `sum(xn .* sinc((tc(k)-tn)/Ts))`.
-10. Repetir el experimento del ZOH con `interp_ideal` y comparar visualmente.
-11. **Barrido de frecuencia**: aumentar la frecuencia de la senoide de 1 en 1 Hz
+11. Repetir el experimento del ZOH con `interp_ideal` y comparar visualmente.
+12. **Barrido de frecuencia**: aumentar la frecuencia de la senoide de 1 en 1 Hz
     y observar qué ocurre al acercarse a $f_s/2$ y al superarla.
 
 ### Aprendizajes
@@ -275,8 +289,8 @@ Ejercicios del trabajo previo:
   visual; la cuantización tiene un coste cuantificable y predecible; ZOH es lo
   que hace un D/A real y sinc es el ideal inalcanzable.
 - **Transferencia**: el ejercicio de audio conecta una métrica en dB con una
-  experiencia perceptual; el barrido de frecuencia hace *descubrir* Nyquist en
-  lugar de enunciarlo.
+  experiencia perceptual; el ejercicio de muestreo multicomponente y el barrido de
+  frecuencia hacen *descubrir* Nyquist en lugar de enunciarlo.
 
 ---
 
@@ -301,8 +315,8 @@ Ejercicios del trabajo previo:
 | `escalon(t, t0)` | P0 (ej. 4) | — |
 | `pulso(t, A, dur, retardo)` | P0 (ej. 8) | P0 (ej. 11) |
 | `energia_potencia(x)` | P0 (ej. 13) | — |
-| `calcula_sqnr(x, xq)` | P1 previo (ej. 4) | P1 laboratorio (ej. 7, 8) |
-| `interp_ideal(xn, tn, tc)` | P1 laboratorio (ej. 9) | P1 (ej. 10, 11) |
+| `calcula_sqnr(x, xq)` | P1 previo (ej. 4) | P1 laboratorio (ej. 8, 9) |
+| `interp_ideal(xn, tn, tc)` | P1 laboratorio (ej. 10) | P1 (ej. 11, 12) |
 
 Proporcionadas ya escritas: `cuant_redondeo`, `cuant_truncamiento`, `interp_zoh`.
 
@@ -319,20 +333,18 @@ regla de 6 dB/bit · ZOH e interpolación sinc.
 
 Puntos a resolver, relevantes para planificar las prácticas siguientes:
 
-1. **`lab1.qmd`: sección "Muestreo" del trabajo de laboratorio vacía.** Aparece
-   como encabezado entre "Trabajo de laboratorio" y "Cuantización" sin ningún
-   contenido. Es justamente donde encajaría un ejercicio presencial de aliasing.
-2. **Falta el archivo `p44100.wav`.** El ejercicio 8 de la P1 lo carga con
+1. **Falta el archivo `p44100.wav`.** El ejercicio 8 de la P1 lo carga con
    `audioread` y no está en el repositorio; el alumno no puede ejecutarlo.
-3. **Objetivo de la P0 no cumplido.** Entre los objetivos declarados figura
+2. **Objetivo de la P0 no cumplido.** Entre los objetivos declarados figura
    "muestrear una señal, representarla con `stem` y reconocer el **aliasing**",
    pero la palabra *aliasing* no vuelve a aparecer en toda la práctica: el
    concepto se introduce en la P1. O se añade una demostración breve en la P0, o
    se retira el objetivo.
-4. **Objetivos declarados sin verificación explícita.** Ninguna de las dos
+3. **Objetivos declarados sin verificación explícita.** Ninguna de las dos
    prácticas incluye entregable, rúbrica ni criterio de evaluación; conviene
    decidir el formato antes de escribir la P2.
-5. **La numeración de ejercicios es implícita.** El filtro `callouts.lua` numera
-   automáticamente, pero el texto de la P1 remite a "tu solución del Ejercicio 6",
-   una referencia frágil ante cualquier inserción. Merece la pena usar
+4. **La numeración de ejercicios es implícita.** El filtro `callouts.lua` numera
+   automáticamente, pero el texto de la P1 remite a "tu solución del Ejercicio 6".
+   Al insertar el ejercicio de muestreo esa referencia ha seguido siendo válida
+   por estar en el trabajo previo, pero es frágil ante la siguiente inserción. Merece la pena usar
    referencias cruzadas de Quarto si el material va a crecer.
