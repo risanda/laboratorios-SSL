@@ -26,7 +26,7 @@ Al terminar deberías ser capaz de:
 - **Resolver numéricamente** ecuaciones de primer y segundo orden con `ode45`.
 - **Reducir** una ecuación de segundo orden a un sistema de dos de primer orden
   mediante un vector de estado.
-- Distinguir la **respuesta natural** (la que produce la energía almacenada) de
+- Distinguir la **respuesta libre** (la que produce la energía almacenada) de
   la **respuesta forzada** (la que produce la entrada).
 - Identificar los tres **regímenes** de un sistema de segundo orden
   (sobreamortiguado, crítico y subamortiguado) y relacionarlos con las **raíces o polos** de la ecuación característica
@@ -58,7 +58,7 @@ $3x  = 6$ encuentras que $x = 2$, y ahí se acaba el problema. Podríamos leer e
 Una **ecuación diferencial** es distinta: la incógnita es una **función**, y la
 ecuación relaciona esa función con sus derivadas. Por ejemplo,
 $$ y'(t) = -\,y(t) $$
-no tiene por solución un número. Podríamos leer esta ecuación como: "*busca una cuya derivada sea, en cada instante, su propio valor cambiado de signo*". Esta ecuación en concreto podría describir, por ejemplo, la velocidad de enfriamiento de un objeto: cuanto más caliente está, más rápido pierde calor. Siguiendo esta analogía, fíjate que **necesitamos un punto de partida** para definir completamente el problema. Sabemos cómo se enfría el objeto, pero necesitamos su temperatura inicial. A esto se le llama **condición inicial**, y la denotamos como $y(0)$.
+no tiene por solución un número. Podríamos leer esta ecuación como: "*busca una función cuya derivada sea, en cada instante, su propio valor cambiado de signo*". Esta ecuación en concreto podría describir, por ejemplo, la velocidad de enfriamiento de un objeto: cuanto más caliente está, más rápido pierde calor. Siguiendo esta analogía, fíjate que **necesitamos un punto de partida** para definir completamente el problema. Sabemos cómo se enfría el objeto, pero necesitamos su temperatura inicial. A esto se le llama **condición inicial**, y la denotamos como $y(0)$.
 
 | | Ecuación algebraica | Ecuación diferencial |
 |---|---|---|
@@ -121,7 +121,7 @@ donde $v_0$ es la velocidad inicial.
 
 ### Resolución numérica con `ode45`
 
-MATLAB resuelve ecuaciones diferenciales con la función`ode45`. Se usa así:
+MATLAB resuelve ecuaciones diferenciales con la función `ode45`. Se usa así:
 
 ```matlab
 [t, y] = ode45(edo, tspan, y0)
@@ -134,9 +134,16 @@ actual `y`, y devuelve la derivada `y'`
 -  `tspan` es el intervalo de tiempo
 `[t_inicial t_final]`
 - `y0` es la condición inicial
-- los valore devueltos on el vector de instantes `t` y el de valores `y`, listos para dibujar
+- los valores devueltos son el vector de instantes `t` y el de valores `y`, listos para dibujar
 
 
+::: {.ejercicio}
+Resuelve con `ode45` la ecuación $v'(t) = g$ en el intervalo $[0, 3]$ s para una
+pelota que se deja caer, es decir, con $v(0) = 0$. Superpón la solución
+analítica $v(t) = v_0 + g\,t$ y comprueba que ambas coinciden.
+:::
+
+::: {.solucion}
 ```{matlab}
 clear all; close all; clc;
 g   = -9.81;                  % gravedad (m/s^2), negativa
@@ -156,46 +163,6 @@ legend('analitica', 'ode45')
 
 Las dos curvas se superponen porque `ode45` resuelve perfectamente un problema tan
 sencillo. Lo importante aquí es el procedimiento. Ahora ya sabes cómo resolver cualquier ecuación diferencial de primer orden con Matlab.
-
-
-
-::: {.ejercicio}
-Resuelve con `ode45` la misma ecuación para **dos condiciones iniciales**
-distintas, $v_0 = 0$ (pelota que se deja caer) y $v_0 = 15$ m/s (pelota lanzada
-hacia arriba), en el intervalo $[0, 3]$ s. Dibuja cada caso en un panel de una
-figura de 2×1, superponiendo en cada uno la solución analítica $v_0 + g\,t$.
-¿En qué se parecen las dos soluciones y en qué se diferencian?
-:::
-
-::: {.solucion}
-```{matlab}
-clear all; close all; clc;
-g    = -9.81;
-v0s  = [0, 15];                    % las dos condiciones iniciales
-nom  = {'v_0 = 0 m/s (se deja caer)', 'v_0 = 15 m/s (lanzada hacia arriba)'};
-
-edo = @(t, v) g;
-
-for k = 1:2
-    v0 = v0s(k);
-    [t, v] = ode45(edo, [0 3], v0);
-
-    subplot(2, 1, k)
-    plot(t, v0 + g*t, 'b-', 'LineWidth', 2)     % analitica
-    hold on
-    plot(t, v, 'g--', 'LineWidth', 2)           % ode45
-    hold off
-    title(nom{k})
-    xlabel('t (s)'); ylabel('v (m/s)'); grid on
-    legend('analitica', 'ode45', 'Location', 'southwest')
-end
-```
-
-Las dos rectas tienen **la misma pendiente**, $g$, porque la ecuación
-diferencial es la misma: la física no cambia por lanzar la pelota. Lo único que
-cambia es el **punto de partida**, y eso desplaza la recta verticalmente. La
-segunda pelota tarda algo más de 1.5 s en frenarse (cuando $v$ cruza el cero) y
-a partir de ahí cae como la primera.
 :::
 
 ## Sistemas de orden superior
@@ -501,7 +468,7 @@ sustituido por un cortocircuito, $x(t) = 0$, y lo que hay es un condensador que
 llega cargado a $V_0 = 10$ V.
 
 Toda la respuesta sale entonces de la energía almacenada en el condensador. Es
-lo que se llama **respuesta natural**, y su expresión analítica es
+lo que se llama **respuesta libre**, y su expresión analítica es
 $$ y(t) = V_0\,e^{-t/\tau} $$
 
 ::: {.ejercicio}
