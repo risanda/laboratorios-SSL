@@ -26,6 +26,9 @@ izquierdo** para navegar entre labs; cada lab se puede descargar además en **PD
 - `index.qmd` — portada del sitio.
 - `lab0.qmd`, `lab1.qmd`, … — las prácticas.
 - `callouts.lua` — filtro de callouts de ejercicio/solución (ver más abajo).
+- `CONTENIDOS.md` — mapa docente: objetivos, contenidos y ejercicios de cada
+  práctica, e inventario acumulado de comandos y conceptos.
+- `TODO.md` — pendientes del material.
 - `_site/` — salida generada (HTML + PDF). No se edita a mano.
 - `_freeze/`, `.jupyter_cache/`, `.quarto/` — cachés de ejecución y de proyecto
   (ver *Freeze y caché*). Se regeneran solas; se pueden borrar.

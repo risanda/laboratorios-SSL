@@ -9,7 +9,7 @@ solapamientos o huecos.
 - [Práctica 0 — Introducción a MATLAB](#práctica-0--introducción-a-matlab)
 - [Práctica 1 — Conversión A/D y D/A](#práctica-1--conversión-ad-y-da)
 - [Inventario acumulado](#inventario-acumulado)
-- [Huecos detectados](#huecos-detectados)
+- [Pendientes](TODO.md) — lo que queda por resolver
 
 ---
 
@@ -323,20 +323,3 @@ Potencia media y energía · convolución y sistemas LTI · escalón unitario y 
 serie de Fourier y fenómeno de Gibbs · media móvil como filtro · muestreo ·
 aliasing y filtro anti-aliasing · Nyquist-Shannon · cuantización uniforme · SQNR y
 regla de 6 dB/bit · ZOH e interpolación sinc.
-
----
-
-## Huecos detectados
-
-Puntos a resolver, relevantes para planificar las prácticas siguientes:
-
-1. **Falta el archivo `p44100.wav`.** El ejercicio 8 de la P1 lo carga con
-   `audioread` y no está en el repositorio; el alumno no puede ejecutarlo.
-2. **Objetivos declarados sin verificación explícita.** Ninguna de las dos
-   prácticas incluye entregable, rúbrica ni criterio de evaluación; conviene
-   decidir el formato antes de escribir la P2.
-3. **La numeración de ejercicios es implícita.** El filtro `callouts.lua` numera
-   automáticamente, pero el texto de la P1 remite a "tu solución del Ejercicio 6".
-   Al insertar el ejercicio de muestreo esa referencia ha seguido siendo válida
-   por estar en el trabajo previo, pero es frágil ante la siguiente inserción. Merece la pena usar
-   referencias cruzadas de Quarto si el material va a crecer.
