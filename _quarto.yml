@@ -16,6 +16,8 @@ website:
         href: lab0.qmd
       - text: "Práctica 1 — Conversión AD y DA"
         href: lab1.qmd
+      - text: "Práctica 2 — Análisis en el dominio temporal"
+        href: lab2.qmd
 
 # --- metadatos y ejecución compartidos por todos los labs ---
 lang: es

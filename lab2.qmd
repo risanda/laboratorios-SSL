@@ -1,0 +1,810 @@
+---
+title: "Práctica 2: Análisis de sistemas en el dominio temporal"
+---
+
+# Introducción
+
+En las prácticas anteriores las señales eran vectores de números que
+manipulábamos directamente. Aquí damos un paso más: pasamos a estudiar
+**sistemas**, es decir, cosas que reciben una señal y devuelven otra. Y lo
+haremos en el **dominio temporal**, resolviendo la ecuación diferencial que
+describe el sistema.
+
+Damos por supuesto que has hecho las prácticas 0 y 1, así que manejas vectores,
+operaciones elemento a elemento, funciones propias en archivos `.m`, funciones
+anónimas con `@` y los comandos básicos de representación gráfica.
+
+Como siempre, el documento está pensado para que lo sigas **escribiendo tú mismo
+el código** en un *script*: no basta con leerlo.
+
+## Objetivos
+
+Al terminar deberías ser capaz de:
+
+- Reconocer una **ecuación diferencial** y entender por qué su solución es una
+  función y no un número, y qué papel juegan las **condiciones iniciales**.
+- Resolver numéricamente ecuaciones de primer y segundo orden con `ode45`,
+  escribiendo la ecuación como una función anónima.
+- **Reducir** una ecuación de segundo orden a un sistema de dos de primer orden
+  mediante un vector de estado.
+- Distinguir la **respuesta natural** (la que produce la energía almacenada) de
+  la **respuesta forzada** (la que produce la entrada).
+- Identificar los tres **regímenes** de un sistema de segundo orden
+  (sobreamortiguado, crítico y subamortiguado) y relacionarlos con el **factor
+  de calidad**.
+- Observar el efecto de la **resonancia** en un circuito RLC serie.
+
+## Estructura de la práctica
+
+Como en la práctica anterior, el documento se divide en dos partes. El **trabajo
+previo** debes prepararlo antes de acudir al laboratorio; cada apartado lleva un
+ejercicio con su solución desplegable. El **trabajo de laboratorio** es lo que
+harás durante la sesión, y reutiliza tanto los conceptos como las funciones del
+trabajo previo.
+
+:::{.callout-warning}
+## Recomendaciones
+Trabaja en una carpeta dedicada a esta práctica y crea un archivo `ejercicioX.m`
+por cada ejercicio. Recuerda que las funciones auxiliares deben estar en esa
+misma carpeta para que MATLAB las encuentre. Vas a necesitar la función
+`escalon` que escribiste en la Práctica 0: cópiala a esta carpeta.
+:::
+
+# Trabajo previo
+
+## Qué es una ecuación diferencial
+
+Hasta ahora, cuando resolvías una ecuación buscabas un **número**. Al resolver
+$3x - 6 = 0$ encuentras que $x = 2$, y ahí se acaba el problema.
+
+Una **ecuación diferencial** es distinta: la incógnita es una **función**, y la
+ecuación relaciona esa función con sus derivadas. Por ejemplo,
+$$ y'(t) = -2\,y(t) $$
+no pregunta por un número, sino por *qué función* tiene la propiedad de que su
+derivada sea, en cada instante, menos el doble de su valor.
+
+| | Ecuación algebraica | Ecuación diferencial |
+|---|---|---|
+| Incógnita | un número | una función |
+| Ejemplo | $3x - 6 = 0$ | $y'(t) = -2y(t)$ |
+| Solución | $x = 2$ | $y(t) = K e^{-2t}$, para cualquier $K$ |
+| Cuántas soluciones | normalmente una | una **familia** infinita |
+| Para concretarla | nada más | hace falta una **condición inicial** |
+| Cómo se comprueba | sustituyendo | derivando y sustituyendo |
+
+La última fila de la tabla es importante y es la misma en los dos casos: una
+solución se comprueba sustituyéndola en la ecuación. Si decimos que
+$y(t) = K e^{-2t}$ resuelve $y' = -2y$, basta con derivar,
+$y'(t) = -2K e^{-2t}$, y ver que en efecto es igual a $-2\,y(t)$.
+
+Que la solución sea una familia y no una función concreta no es un defecto:
+significa que la ecuación describe el **comportamiento** del sistema, y hace
+falta un dato más para saber en cuál de todas las evoluciones posibles estamos.
+Ese dato es la **condición inicial**. Si además sabemos que $y(0) = 5$, entonces
+$K = 5$ y ya hay una única solución.
+
+::: {.ejercicio}
+Clasifica estas ecuaciones en algebraicas y diferenciales:
+
+1. $x^2 - 5x + 6 = 0$
+2. $y'(t) + 3y(t) = 0$
+3. $2u + 7 = 15$
+4. $y''(t) = -9.81$
+
+Después, comprueba por sustitución que $y(t) = 4e^{-3t}$ es solución de la
+ecuación 2, y determina qué condición inicial le corresponde.
+:::
+
+::: {.solucion}
+Son **algebraicas** la 1 y la 3, porque la incógnita es un número: en la 1 se
+buscan los valores $x = 2$ y $x = 3$, y en la 3, $u = 4$. Son **diferenciales**
+la 2 y la 4, porque en ellas la incógnita es una función del tiempo y aparecen
+sus derivadas.
+
+Para comprobar la 2, derivamos la función propuesta:
+$$ y(t) = 4e^{-3t} \quad\Longrightarrow\quad y'(t) = -12e^{-3t} $$
+y sustituimos en la ecuación:
+$$ y'(t) + 3y(t) = -12e^{-3t} + 3\cdot 4e^{-3t} = -12e^{-3t} + 12e^{-3t} = 0 $$
+Se cumple, luego es solución. La condición inicial se obtiene evaluando en
+$t = 0$: como $y(0) = 4e^{0} = 4$, la condición es $y(0) = 4$.
+:::
+
+## Sistemas de primer orden: velocidad en caída libre
+
+Empecemos por el sistema físico más simple que existe: un objeto que cae. Si
+llamamos $v(t)$ a su velocidad, la segunda ley de Newton dice que
+$$ v'(t) = g $$
+Es una ecuación diferencial de primer orden, porque solo aparece la primera
+derivada.
+
+:::{.callout-important}
+## Convenio de signos
+En toda esta práctica la posición se mide **hacia arriba** y el suelo es el
+origen, $y = 0$. Como la gravedad tira hacia abajo, es **negativa**:
+$g = -9.81\ \mathrm{m/s^2}$. Con este convenio, $v_0 > 0$ es una pelota lanzada
+hacia arriba y $v_0 = 0$ una pelota que simplemente se deja caer.
+:::
+
+Fíjate en que aquí **no hay ninguna señal de entrada**: nadie está actuando
+sobre la pelota. La ecuación por sí sola no basta para saber qué velocidad
+tendrá la pelota dentro de dos segundos, porque su solución es toda una familia
+de rectas:
+$$ v(t) = v_0 + g\,t $$
+Lo que selecciona una de ellas es la **condición inicial** $v(0) = v_0$. No es
+un detalle administrativo que MATLAB nos exija por capricho: sin ella el
+problema está genuinamente incompleto.
+
+### Resolución numérica con `ode45`
+
+MATLAB resuelve ecuaciones diferenciales con `ode45`. Se usa así:
+
+```matlab
+[t, y] = ode45(edo, tspan, y0)
+```
+
+donde `edo` es una **función anónima** que recibe el instante `t` y el valor
+actual `y`, y devuelve la derivada `y'`; `tspan` es el intervalo de tiempo
+`[t_inicial t_final]`; e `y0` es la condición inicial. Devuelve el vector de
+instantes `t` y el de valores `y`, listos para dibujar.
+
+Aquí la derivada vale siempre `g`, así que la ecuación se escribe en una línea:
+
+```{matlab}
+clear all; close all; clc;
+g   = -9.81;                  % gravedad (m/s^2), negativa
+v0  = 0;                      % se deja caer
+
+edo = @(t, v) g;              % la ecuacion diferencial v' = g
+[t, v] = ode45(edo, [0 3], v0);
+
+plot(t, v0 + g*t, 'b-', 'LineWidth', 2)      % solucion analitica
+hold on
+plot(t, v, 'g--', 'LineWidth', 2)            % solucion de ode45
+hold off
+xlabel('t (s)'); ylabel('v(t) (m/s)'); grid on
+title('Velocidad en caida libre')
+legend('analitica', 'ode45', 'Location', 'southwest')
+```
+
+Las dos curvas se superponen porque `ode45` resuelve bien un problema tan
+sencillo. Lo interesante es la mecánica: hemos descrito el sistema con una
+función anónima y MATLAB ha hecho el resto.
+
+::: {.ejercicio}
+Resuelve con `ode45` la misma ecuación para **dos condiciones iniciales**
+distintas, $v_0 = 0$ (pelota que se deja caer) y $v_0 = 15$ m/s (pelota lanzada
+hacia arriba), en el intervalo $[0, 3]$ s. Dibuja cada caso en un panel de una
+figura de 2×1, superponiendo en cada uno la solución analítica $v_0 + g\,t$.
+¿En qué se parecen las dos soluciones y en qué se diferencian?
+:::
+
+::: {.solucion}
+```{matlab}
+clear all; close all; clc;
+g    = -9.81;
+v0s  = [0, 15];                    % las dos condiciones iniciales
+nom  = {'v_0 = 0 m/s (se deja caer)', 'v_0 = 15 m/s (lanzada hacia arriba)'};
+
+edo = @(t, v) g;
+
+for k = 1:2
+    v0 = v0s(k);
+    [t, v] = ode45(edo, [0 3], v0);
+
+    subplot(2, 1, k)
+    plot(t, v0 + g*t, 'b-', 'LineWidth', 2)     % analitica
+    hold on
+    plot(t, v, 'g--', 'LineWidth', 2)           % ode45
+    hold off
+    title(nom{k})
+    xlabel('t (s)'); ylabel('v (m/s)'); grid on
+    legend('analitica', 'ode45', 'Location', 'southwest')
+end
+```
+
+Las dos rectas tienen **la misma pendiente**, $g$, porque la ecuación
+diferencial es la misma: la física no cambia por lanzar la pelota. Lo único que
+cambia es el **punto de partida**, y eso desplaza la recta verticalmente. La
+segunda pelota tarda algo más de 1.5 s en frenarse (cuando $v$ cruza el cero) y
+a partir de ahí cae como la primera.
+:::
+
+## Sistemas de segundo orden: posición en caída libre
+
+Si en lugar de la velocidad queremos la **posición** $y(t)$, la ecuación pasa a
+ser de segundo orden, porque la aceleración es la segunda derivada de la
+posición:
+$$ y''(t) = g $$
+
+Tampoco hay entrada aquí. Lo que sí hay ahora son **dos** condiciones
+iniciales, la posición y la velocidad de partida, y la solución analítica es la
+parábola
+$$ y(t) = y_0 + v_0\,t + \tfrac{1}{2}g\,t^2 $$
+que con nuestro convenio de signos es cóncava hacia abajo y cruza el cero cuando
+la pelota llega al suelo.
+
+### El vector de estado
+
+Y aquí aparece el punto importante de este apartado, que necesitarás en el
+laboratorio: **`ode45` solo sabe resolver ecuaciones de primer orden**. Para
+usarlo con una de segundo orden hay que convertirla antes en un **sistema de dos
+ecuaciones de primer orden**.
+
+El truco consiste en agrupar en un vector, llamado **vector de estado**, la
+función y sus derivadas hasta una menos que el orden. Aquí:
+$$ z = \begin{bmatrix} z_1 \\ z_2 \end{bmatrix}
+     = \begin{bmatrix} y \\ v \end{bmatrix} $$
+
+Con ese cambio, la ecuación de segundo orden se parte en dos de primer orden:
+$$ z_1' = z_2 \qquad\text{(la derivada de la posición es la velocidad)} $$
+$$ z_2' = g \qquad\text{(la derivada de la velocidad es la aceleración)} $$
+
+La primera no es más que la definición de velocidad; la segunda es la ecuación
+original. En MATLAB, la función anónima devuelve ahora un **vector columna** con
+las dos derivadas, y la condición inicial también es un vector de dos
+componentes:
+
+```matlab
+edo = @(t, z) [z(2); g];       % z(1) es la posicion, z(2) la velocidad
+[t, z] = ode45(edo, tspan, [y0; v0]);
+```
+
+De la matriz `z` que devuelve `ode45`, la primera columna es la posición y la
+segunda la velocidad.
+
+::: {.ejercicio}
+Una pelota se lanza hacia arriba desde una altura de 20 m con una velocidad
+inicial de 15 m/s. Resuelve su posición con `ode45` durante 4 s y compárala con
+la parábola analítica. Dibuja también la línea del suelo para ver dónde
+aterriza.
+:::
+
+::: {.solucion}
+```{matlab}
+clear all; close all; clc;
+g  = -9.81;
+y0 = 20;                       % altura inicial (m)
+v0 = 15;                       % velocidad inicial hacia arriba (m/s)
+
+edo = @(t, z) [z(2); g];       % z = [posicion; velocidad]
+[t, z] = ode45(edo, [0 4], [y0; v0]);
+y = z(:,1);                    % primera columna: la posicion
+
+plot(t, y0 + v0*t + 0.5*g*t.^2, 'b-', 'LineWidth', 2)   % analitica
+hold on
+plot(t, y, 'g--', 'LineWidth', 2)                       % ode45
+plot(t, zeros(size(t)), 'k:', 'LineWidth', 1.5)         % el suelo
+hold off
+xlabel('t (s)'); ylabel('y(t) (m)'); grid on
+title('Posicion de una pelota lanzada hacia arriba')
+legend('analitica', 'ode45', 'suelo', 'Location', 'southwest')
+```
+
+La pelota sube durante aproximadamente 1.5 s, alcanza unos 31 m y luego cae,
+cruzando el suelo algo después de los 3.5 s. A partir de ese punto la
+simulación deja de tener sentido físico, porque el modelo no sabe nada del
+suelo: sigue integrando la misma ecuación como si la pelota lo atravesara.
+:::
+
+## Entradas exógenas: carga de un circuito RC
+
+Hasta ahora las respuestas venían de la condición inicial. En este apartado
+aparece por primera vez algo distinto: una **señal de entrada** que actúa sobre
+el sistema desde fuera.
+
+Considera este circuito RC, donde la entrada es la tensión de la fuente $x(t)$ y
+la salida es la tensión en el condensador $y(t)$:
+
+```{.tikz width="45%"}
+\begin{circuitikz}[scale=1.2, transform shape]
+  \draw (0,0) to[V, l=$x(t)$, invert] (0,2)
+        to[R, l=$R$] (3,2)
+        to[C, l_=$C$, v^>=$y(t)$] (3,0) -- (0,0);
+  \node at (0,-0.75) {\small entrada};
+  \node at (3,-0.75) {\small salida};
+\end{circuitikz}
+```
+
+Aplicando la ley de Kirchhoff de tensiones y la relación del condensador se
+llega a la ecuación del sistema:
+$$ RC\,y'(t) + y(t) = x(t) $$
+
+El producto $\tau = RC$ tiene unidades de tiempo y se llama **constante de
+tiempo**: es lo que tarda el circuito en reaccionar. Despejando la derivada para
+dársela a `ode45`:
+$$ y'(t) = \frac{x(t) - y(t)}{\tau} $$
+
+Vamos a cargar el condensador partiendo de **condiciones iniciales nulas**,
+$y(0) = 0$, con una entrada en **escalón** de $E = 10$ V. Como el condensador
+parte descargado, todo lo que ocurra lo provoca la entrada: es la **respuesta
+forzada**. La solución analítica es
+$$ y(t) = E\,(1 - e^{-t/\tau}) $$
+
+Para construir el escalón no hace falta nada nuevo: reutilizamos la función
+`escalon(t, t0)` que escribiste en la Práctica 0.
+
+:::{.callout-note}
+Las funciones de prácticas anteriores siguen sirviendo. Copia `escalon.m` a la
+carpeta de esta práctica y podrás definir la entrada como
+`x = @(t) E*escalon(t, 0);`.
+:::
+
+::: {.ejercicio}
+Con $R = 1\ \mathrm{k}\Omega$ y $C = 1\ \mu\mathrm{F}$, resuelve la carga del
+condensador con `ode45` entre 0 y 5 ms, partiendo de $y(0) = 0$ y con una
+entrada en escalón de 10 V construida con la función `escalon`. Superpón la
+expresión analítica y dibuja también la entrada. ¿Cuánto vale la salida en
+$t = \tau$?
+:::
+
+::: {.solucion}
+```{matlab}
+clear all; close all; clc;
+R   = 1e3;                     % ohmios
+C   = 1e-6;                    % faradios
+tau = R*C;                     % constante de tiempo: 1 ms
+E   = 10;                      % altura del escalon (V)
+
+x   = @(t) E*escalon(t, 0);            % entrada: escalon en t = 0
+edo = @(t, y) (x(t) - y)/tau;          % ecuacion del circuito RC
+
+[t, y] = ode45(edo, [0 5e-3], 0);      % condicion inicial nula
+
+plot(t*1e3, x(t), 'b-', 'LineWidth', 2)                % entrada
+hold on
+plot(t*1e3, E*(1 - exp(-t/tau)), 'k:', 'LineWidth', 2) % analitica
+plot(t*1e3, y, 'g--', 'LineWidth', 2)                  % ode45
+hold off
+xlabel('t (ms)'); ylabel('tension (V)'); grid on
+ylim([0 11])
+title('Carga de un condensador con entrada escalon')
+legend('x(t) entrada', 'analitica', 'ode45', 'Location', 'southeast')
+
+% En t = tau la salida ha llegado al 63 % del valor final
+fprintf('y(tau) = %.3f V, es decir el %.1f %% de E\n', ...
+        E*(1 - exp(-1)), 100*(1 - exp(-1)));
+
+% En tu MATLAB esto va en un fichero individual (escalon.m)
+function y = escalon(t, t0)
+    y = double(t >= t0);
+end
+```
+
+La salida no salta con la entrada: sube exponencialmente hasta alcanzarla. En
+$t = \tau$ ha recorrido el 63 % del camino, y a partir de unas cinco constantes
+de tiempo se puede considerar que ya ha llegado.
+
+Este es el caso en que **toda la respuesta viene de la entrada**. El caso
+complementario, un condensador que ya está cargado y al que no se le aplica
+ninguna entrada, es lo primero que harás en el laboratorio.
+:::
+
+## Introducción al circuito RLC serie
+
+Añadamos una bobina al circuito. El resultado es un **RLC serie**, el sistema de
+segundo orden que usarás durante toda la sesión de laboratorio:
+
+```{.tikz width="55%"}
+\begin{circuitikz}[scale=1.2, transform shape]
+  \draw (0,0) to[V, l=$x(t)$, invert] (0,2)
+        to[L, l=$L$] (2,2)
+        to[C, l=$C$] (4,2)
+        to[R, l_=$R$, v^>=$v_R(t)$] (4,0) -- (0,0);
+  \node at (0,-0.75) {\small entrada};
+  \node at (4,-0.75) {\small salida};
+\end{circuitikz}
+```
+
+:::{.callout-important}
+## La salida es la tensión en la resistencia
+En esta práctica la salida del RLC serie es siempre $v_R(t)$, la tensión en la
+resistencia. No es una elección arbitraria: es precisamente lo que hace que el
+circuito se comporte como un **filtro paso banda**, como verás al final.
+:::
+
+Planteando las ecuaciones del circuito en función de la tensión del condensador
+$v_C$ se llega a
+$$ LC\,v_C''(t) + RC\,v_C'(t) + v_C(t) = x(t) $$
+y la salida se obtiene de la corriente, que pasa por todos los elementos por
+estar en serie:
+$$ v_R(t) = R\,i(t) = RC\,v_C'(t) $$
+
+El comportamiento de este circuito queda determinado por dos parámetros:
+$$ \alpha = \frac{R}{2L} \qquad\qquad \omega_0 = \frac{1}{\sqrt{LC}} $$
+donde $\alpha$ es el **factor de amortiguamiento**, que mide con qué rapidez se
+disipa la energía en la resistencia, y $\omega_0$ la **frecuencia natural**, a
+la que el circuito tiende a oscilar por su cuenta.
+
+### Los tres regímenes
+
+Lo que ocurre depende de cuál de los dos gane:
+
+- $\alpha > \omega_0$ — **sobreamortiguado**. La resistencia domina y disipa la
+  energía antes de que llegue a oscilar. La respuesta se acerca al valor final
+  sin oscilar, pero lentamente.
+- $\alpha = \omega_0$ — **crítico**. El caso frontera: tampoco oscila, pero es
+  el más rápido posible en llegar al valor final. Es el punto de diseño habitual
+  cuando se quiere velocidad sin sobrepasar el objetivo.
+- $\alpha < \omega_0$ — **subamortiguado**. La energía va y viene entre la
+  bobina y el condensador antes de disiparse, así que la respuesta **oscila**
+  a la frecuencia
+  $\omega_d = \sqrt{\omega_0^2 - \alpha^2}$, dentro de una envolvente que decae
+  como $e^{-\alpha t}$.
+
+### Resonancia y factor de calidad
+
+Si en lugar de un escalón le aplicamos una senoide, aparece un fenómeno nuevo.
+La bobina y el condensador tienen reactancias de signo contrario, y a una
+frecuencia concreta se cancelan exactamente. Esa frecuencia es la de
+**resonancia**:
+$$ f_0 = \frac{\omega_0}{2\pi} $$
+
+En resonancia la impedancia del circuito se reduce a $R$, así que **toda la
+tensión de entrada aparece en la resistencia**: la salida iguala a la entrada,
+con ganancia 1 y sin desfase, y esto ocurre sea cual sea el valor de $R$. Por
+eso el RLC serie con salida en la resistencia es un **filtro paso banda**: deja
+pasar lo que está cerca de $f_0$ y atenúa lo que se aleja, tanto por arriba como
+por abajo.
+
+Lo selectivo que sea ese filtro lo mide el **factor de calidad**:
+$$ Q = \frac{\omega_0 L}{R} = \frac{1}{R}\sqrt{\frac{L}{C}} $$
+y el ancho de la banda que deja pasar es aproximadamente $f_0/Q$: a mayor $Q$,
+más estrecha y más selectiva.
+
+Los dos bloques que acabas de ver no son independientes. Como
+$Q = \omega_0/2\alpha$, el factor de calidad y el régimen son la misma
+información contada de dos maneras:
+
+| | $Q > 0.5$ | $Q = 0.5$ | $Q < 0.5$ |
+|---|---|---|---|
+| régimen | subamortiguado | crítico | sobreamortiguado |
+
+Es decir, **más $Q$ significa a la vez más selectivo y más oscilante**. Un
+circuito que resuena con fuerza es el mismo que tarda en dejar de vibrar.
+
+::: {.ejercicio}
+Un circuito RLC serie tiene $L = 10\ \mathrm{mH}$ y $C = 1\ \mu\mathrm{F}$.
+Calcula a mano $\omega_0$, y después $\alpha$ y $Q$ para cada uno de estos tres
+valores de resistencia, indicando en qué régimen está cada configuración:
+
+$$ R = 100\ \Omega \qquad R = 200\ \Omega \qquad R = 500\ \Omega $$
+
+Calcula también la frecuencia de resonancia $f_0$ en hercios. No hace falta
+simular nada todavía: son las tres configuraciones que usarás en el
+laboratorio, y conviene que llegues sabiendo qué esperar de cada una.
+:::
+
+::: {.solucion}
+La frecuencia natural no depende de $R$:
+$$ \omega_0 = \frac{1}{\sqrt{LC}} = \frac{1}{\sqrt{10^{-2}\cdot 10^{-6}}}
+   = \frac{1}{10^{-4}} = 10^{4}\ \mathrm{rad/s} $$
+y por tanto
+$$ f_0 = \frac{\omega_0}{2\pi} = \frac{10^4}{2\pi} \approx 1592\ \mathrm{Hz} $$
+
+Para el factor de calidad conviene usar la segunda forma, que no depende de
+$\omega_0$:
+$$ \sqrt{\frac{L}{C}} = \sqrt{\frac{10^{-2}}{10^{-6}}} = \sqrt{10^4} = 100
+   \qquad\Longrightarrow\qquad Q = \frac{100}{R} $$
+
+Con $\alpha = R/2L = R/0.02 = 50R$:
+
+| $R$ | $\alpha$ (rad/s) | $Q$ | régimen |
+|---|---|---|---|
+| 100 $\Omega$ | 5000 | 1 | subamortiguado ($\alpha < \omega_0$) |
+| 200 $\Omega$ | 10000 | 0.5 | crítico ($\alpha = \omega_0$) |
+| 500 $\Omega$ | 25000 | 0.2 | sobreamortiguado ($\alpha > \omega_0$) |
+
+Los tres valores están elegidos a propósito para caer uno en cada régimen. La
+configuración de $100\ \Omega$ es además la de mayor factor de calidad, y por
+tanto la más selectiva: es la que usarás para estudiar la resonancia.
+:::
+
+# Trabajo de laboratorio
+
+Todo se resuelve con `ode45`. Cuando exista una expresión analítica te la damos
+hecha para que la superpongas y compruebes la simulación: no tienes que deducir
+ninguna.
+
+## Descarga del circuito RC
+
+Empezamos por el caso complementario al de la carga que hiciste en el trabajo
+previo. Es el mismo circuito, con $R = 1\ \mathrm{k}\Omega$ y
+$C = 1\ \mu\mathrm{F}$, pero ahora **no hay entrada**: la fuente se ha
+sustituido por un cortocircuito, $x(t) = 0$, y lo que hay es un condensador que
+llega cargado a $V_0 = 10$ V.
+
+Toda la respuesta sale entonces de la energía almacenada en el condensador. Es
+lo que se llama **respuesta natural**, y su expresión analítica es
+$$ y(t) = V_0\,e^{-t/\tau} $$
+
+::: {.ejercicio}
+Resuelve la descarga con `ode45` entre 0 y 5 ms, partiendo de $y(0) = 10$ V y
+con entrada nula, y superpón la expresión analítica. Comprueba qué fracción de
+$V_0$ queda en $t = \tau$ y compárala con lo que valía la carga en ese mismo
+instante.
+:::
+
+::: {.solucion}
+```{matlab}
+%| echo: false
+clear all; close all; clc;
+R   = 1e3;
+C   = 1e-6;
+tau = R*C;
+V0  = 10;
+
+edo = @(t, y) (0 - y)/tau;             % sin entrada: x(t) = 0
+[t, y] = ode45(edo, [0 5e-3], V0);     % condicion inicial: condensador cargado
+
+plot(t*1e3, V0*exp(-t/tau), 'b-', 'LineWidth', 2)
+hold on
+plot(t*1e3, y, 'g--', 'LineWidth', 2)
+plot([tau tau]*1e3, [0 V0*exp(-1)], 'k:', 'LineWidth', 1.5)
+hold off
+xlabel('t (ms)'); ylabel('v_C (V)'); grid on
+title('Descarga de un condensador')
+legend('analitica', 'ode45', 't = \tau', 'Location', 'northeast')
+```
+
+En $t = \tau$ la tensión ha caído al 37 % de $V_0$, unos 3.7 V. Es la imagen
+especular de la carga, que en ese mismo instante había subido al 63 %: entre las
+dos suman el 100 %, porque una es lo que le falta a la otra.
+
+Compara los dos ejercicios. El circuito es el mismo y la ecuación diferencial
+también; lo único que cambia es **de dónde sale la respuesta**. En la carga
+venía de la entrada, con el condensador descargado; aquí viene de la condición
+inicial, sin entrada ninguna. Son las dos piezas con las que se construye
+cualquier respuesta de un sistema lineal.
+:::
+
+## El circuito RC como filtro
+
+Seguimos con el mismo circuito, $R = 1\ \mathrm{k}\Omega$ y
+$C = 1\ \mu\mathrm{F}$ ($\tau = 1$ ms), otra vez con condiciones iniciales
+nulas, pero ahora la entrada es una **senoide**. Cambiar de entrada no cuesta
+nada: basta con sustituir la función anónima que le pasas a `ode45`.
+
+Este circuito tiene una **frecuencia de corte**
+$$ f_c = \frac{1}{2\pi\tau} \approx 159\ \mathrm{Hz} $$
+que separa las frecuencias que deja pasar de las que atenúa.
+
+::: {.ejercicio}
+Resuelve con `ode45` la respuesta del circuito a dos entradas senoidales de 1 V
+de amplitud, una de 50 Hz y otra de 1 kHz, y dibuja entrada y salida
+superpuestas en una figura de 2×1.
+
+Cada frecuencia necesita **su propio intervalo de simulación**: a 50 Hz el
+periodo es de 20 ms, así que hay que llegar a unos 60 ms para ver tres ciclos;
+para 1 kHz bastan 6 ms. Mide la amplitud de la salida ya en régimen
+permanente y compárala con la de la entrada. ¿Qué le hace el circuito a cada
+señal?
+:::
+
+::: {.solucion}
+```{matlab}
+%| echo: false
+clear all; close all; clc;
+R   = 1e3;
+C   = 1e-6;
+tau = R*C;
+A   = 1;                                % amplitud de entrada (V)
+
+fs    = [50, 1000];                     % las dos frecuencias (Hz)
+tfin  = [60e-3, 6e-3];                  % cada una con su intervalo
+
+for k = 1:2
+    f = fs(k);
+    x   = @(t) A*sin(2*pi*f*t);
+    edo = @(t, y) (x(t) - y)/tau;
+    [t, y] = ode45(edo, [0 tfin(k)], 0);
+
+    subplot(2, 1, k)
+    plot(t*1e3, x(t), 'b-', 'LineWidth', 1.5)
+    hold on
+    plot(t*1e3, y, 'g-', 'LineWidth', 2)
+    hold off
+    xlabel('t (ms)'); ylabel('tension (V)'); grid on
+    ylim([-1.2 1.2])
+    title(sprintf('f = %d Hz', f))
+    legend('x(t) entrada', 'y(t) salida', 'Location', 'southeast')
+
+    % amplitud de salida medida en el ultimo tramo, ya en permanente
+    ultimo = t > 0.7*tfin(k);
+    fprintf('f = %4d Hz: amplitud de salida = %.3f V (ganancia %.3f)\n', ...
+            f, max(abs(y(ultimo))), max(abs(y(ultimo)))/A);
+end
+```
+
+A **50 Hz**, muy por debajo de la frecuencia de corte, la salida es casi igual a
+la entrada: apenas se atenúa y el desfase es pequeño. A **1 kHz**, muy por
+encima, la salida queda reducida a una fracción de la entrada y además va
+claramente retrasada respecto a ella.
+
+Los valores medidos coinciden con la ganancia teórica
+$|H| = 1/\sqrt{1 + (\omega\tau)^2}$, que vale unos 0.95 a 50 Hz y unos 0.16 a
+1 kHz. El circuito deja pasar las frecuencias bajas y frena las altas: es un
+**filtro paso bajo**.
+
+Fíjate también en el arranque de cada gráfica. Los primeros instantes no siguen
+la senoide definitiva, porque a la respuesta forzada se le suma un
+**transitorio** que aún no se ha apagado. Solo cuando ese transitorio
+desaparece queda el **régimen permanente**, que es donde hay que medir la
+amplitud. Por eso el código no toma el máximo de toda la señal, sino el del
+último tramo.
+:::
+
+## RLC: los tres regímenes ante un escalón
+
+Pasamos al circuito RLC serie con $L = 10\ \mathrm{mH}$ y
+$C = 1\ \mu\mathrm{F}$, salida en la resistencia, condiciones iniciales nulas y
+una entrada en **escalón** de 15 V construida otra vez con `escalon`.
+
+Para resolverlo con `ode45` hay que usar el vector de estado del trabajo previo,
+$z = [v_C;\ v_C']$. Despejando la segunda derivada de la ecuación del circuito:
+$$ z_1' = z_2 \qquad\qquad z_2' = \frac{x(t) - z_1 - RC\,z_2}{LC} $$
+y la salida se obtiene como $v_R = RC\,z_2$.
+
+El escalón es la entrada adecuada para este ejercicio precisamente porque
+excita el transitorio y deja los tres regímenes a la vista.
+
+::: {.ejercicio}
+Simula las tres configuraciones que clasificaste en el trabajo previo
+($R = 100$, $200$ y $500\ \Omega$) entre 0 y 3 ms, y dibuja **las tres salidas
+superpuestas en una misma gráfica**, junto con la entrada como referencia.
+
+Antes de mirar la solución, identifica qué curva corresponde a cada régimen.
+Después fíjate en cuál de las tres llega antes a su valor final: ¿es la que
+esperabas?
+:::
+
+::: {.solucion}
+```{matlab}
+%| echo: false
+clear all; close all; clc;
+L = 10e-3;
+C = 1e-6;
+E = 15;
+
+Rs  = [100, 200, 500];
+col = {'g', 'r', 'k'};
+nom = {'R = 100 \Omega (subamortiguado)', ...
+       'R = 200 \Omega (critico)', ...
+       'R = 500 \Omega (sobreamortiguado)'};
+
+x = @(t) E*escalon(t, 0);
+
+t0 = linspace(0, 3e-3, 500);
+plot(t0*1e3, x(t0), 'b-', 'LineWidth', 1.5)      % entrada de referencia
+hold on
+for k = 1:3
+    R = Rs(k);
+    edo = @(t, z) [z(2); (x(t) - z(1) - R*C*z(2))/(L*C)];
+    [t, z] = ode45(edo, [0 3e-3], [0; 0]);
+    vR = R*C*z(:,2);                             % salida: tension en R
+    plot(t*1e3, vR, col{k}, 'LineWidth', 2)
+end
+hold off
+xlabel('t (ms)'); ylabel('tension (V)'); grid on
+title('Respuesta del RLC serie a un escalon de 15 V')
+legend(['x(t) entrada', nom], 'Location', 'northeast')
+
+% En tu MATLAB esto va en un fichero individual (escalon.m)
+function y = escalon(t, t0)
+    y = double(t >= t0);
+end
+```
+
+Las tres curvas se distinguen a simple vista:
+
+- **Subamortiguado** ($R = 100\ \Omega$, verde): sube, baja, **cruza el cero** y
+  oscila un par de veces más antes de apagarse. Es el único que oscila.
+- **Crítico** ($R = 200\ \Omega$, rojo): sube y baja sin llegar a cruzar el cero,
+  y es el que antes se apaga del todo.
+- **Sobreamortiguado** ($R = 500\ \Omega$, negro): tampoco cruza el cero, pero
+  tarda bastante más que los otros dos en volver a él.
+
+El resultado que suele sorprender es el tercero. Con más resistencia se disipa
+más energía, así que uno esperaría que el circuito se calmara antes; y sin
+embargo el caso sobreamortiguado es **el más lento de los tres**. Sus constantes
+de tiempo dominantes son 200, 100 y 479 µs respectivamente: pasado el punto
+crítico, seguir aumentando $R$ no acelera la respuesta, la frena. Esa es la
+razón de que el régimen crítico sea el punto de diseño habitual cuando interesa
+llegar rápido al valor final.
+
+Observa además que la salida arranca en cero y acaba en cero en los tres casos,
+aunque la entrada se quede fija en 15 V. Tiene sentido: en régimen permanente,
+con una entrada constante, el condensador ya no deja pasar corriente, y sin
+corriente no hay tensión en la resistencia. Por eso aquí no hay ningún valor
+final que sobrepasar, y lo que distingue al subamortiguado es que **cruza el
+cero**. Fíjate por último en la altura de los picos, que va justo al revés de lo
+que uno diría: el caso con más resistencia es el que alcanza el pico más alto.
+:::
+
+## RLC: comportamiento en frecuencia y resonancia
+
+Terminamos volviendo a las entradas senoidales, esta vez sobre el RLC. Usaremos
+solo la configuración de $R = 100\ \Omega$, que según calculaste en el trabajo
+previo es la de mayor factor de calidad ($Q = 1$) y por tanto la más selectiva.
+
+Su frecuencia de resonancia es $f_0 \approx 1592$ Hz.
+
+::: {.ejercicio}
+Simula la salida del circuito ante tres entradas senoidales de 15 V de amplitud
+y tres frecuencias distintas, y dibuja entrada y salida superpuestas en una
+figura de 3×1:
+
+- **por debajo** de la resonancia, 500 Hz
+- **en** la resonancia, 1592 Hz
+- **por encima** de la resonancia, 5000 Hz
+
+Simula el tiempo suficiente para que el transitorio inicial se apague, mide la
+amplitud de la salida en régimen permanente y compárala con la de la entrada.
+¿Qué tienen en común el primer caso y el tercero?
+:::
+
+::: {.solucion}
+```{matlab}
+%| echo: false
+clear all; close all; clc;
+L = 10e-3;
+C = 1e-6;
+R = 100;                                % la configuracion de mayor Q
+A = 15;
+
+fs   = [500, 1592, 5000];               % por debajo, en resonancia, por encima
+tfin = [8e-3, 8e-3, 4e-3];
+nom  = {'f = 500 Hz (por debajo de f_0)', ...
+        'f = 1592 Hz (resonancia)', ...
+        'f = 5000 Hz (por encima de f_0)'};
+
+for k = 1:3
+    f = fs(k);
+    x   = @(t) A*sin(2*pi*f*t);
+    edo = @(t, z) [z(2); (x(t) - z(1) - R*C*z(2))/(L*C)];
+    [t, z] = ode45(edo, [0 tfin(k)], [0; 0]);
+    vR = R*C*z(:,2);
+
+    subplot(3, 1, k)
+    plot(t*1e3, x(t), 'b-', 'LineWidth', 1.2)
+    hold on
+    plot(t*1e3, vR, 'g-', 'LineWidth', 1.8)
+    hold off
+    xlabel('t (ms)'); ylabel('V'); grid on
+    ylim([-20 20])
+    title(nom{k})
+    legend('x(t)', 'v_R(t)', 'Location', 'southeast')
+
+    ultimo = t > 0.7*tfin(k);
+    fprintf('f = %4d Hz: amplitud de v_R = %5.2f V (ganancia %.3f)\n', ...
+            f, max(abs(vR(ultimo))), max(abs(vR(ultimo)))/A);
+end
+```
+
+En **resonancia** la salida se superpone a la entrada: misma amplitud y sin
+desfase. Es lo que anticipaba el trabajo previo, porque a esa frecuencia las
+reactancias de $L$ y $C$ se cancelan y el circuito se comporta como si solo
+estuviera la resistencia.
+
+A **500 Hz** y a **5000 Hz** la salida cae aproximadamente a un tercio de la
+entrada, y en ambos casos por una cantidad parecida. Eso es lo que tienen en
+común: da igual alejarse de $f_0$ por abajo que por arriba, el circuito atenúa
+en las dos direcciones. Los valores coinciden con la ganancia teórica
+$$ |H| = \frac{R}{\sqrt{R^2 + \left(\omega L - \dfrac{1}{\omega C}\right)^2}} $$
+
+El circuito selecciona, pues, una **banda** de frecuencias alrededor de $f_0$ y
+rechaza el resto. De ahí el nombre de filtro paso banda, y de ahí que el factor
+de calidad $Q$ mida lo estrecha que es esa banda.
+:::
+
+:::{.callout-note}
+## Esto es solo una pincelada
+Lo que acabas de hacer es explorar la **respuesta en frecuencia** del circuito
+a la brava: simulando en el tiempo, una frecuencia cada vez. Es un método
+laborioso, y solo hemos mirado tres puntos.
+
+Más adelante en la asignatura verás que existe una herramienta que resume todo
+este comportamiento en una sola gráfica, el **diagrama de Bode**, que representa
+la ganancia y el desfase para todas las frecuencias a la vez. Entonces
+entenderás por qué la salida cae a un lado y a otro de $f_0$, y por qué lo hace
+con esa forma concreta.
+:::

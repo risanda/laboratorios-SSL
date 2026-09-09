@@ -681,6 +681,74 @@ end
 :::
 
 
+## Funciones anónimas: el operador `@`
+
+No siempre compensa crear un archivo `.m` para una fórmula de una sola línea.
+Para esos casos MATLAB tiene las **funciones anónimas**, que se escriben con el
+operador `@` directamente en el *script*:
+
+```{matlab}
+clear all; clc;
+f = @(x) x.^2;      % f es una funcion que eleva al cuadrado
+f(3)                % se llama igual que cualquier otra funcion
+f([1 2 3])          % y sigue funcionando elemento a elemento
+```
+
+Entre paréntesis, detrás de la `@`, van los argumentos de entrada; después, la
+expresión que se calcula. La función anónima puede usar variables que ya existan
+en el *script*, y se queda con el valor que tenían **en el momento de crearla**:
+
+```{matlab}
+clear all; clc;
+A = 2;
+g = @(t) A*sin(2*pi*t);   % g captura el valor A = 2
+A = 100;                  % cambiar A ahora no afecta a g
+g(0.25)                   % sigue valiendo 2, no 100
+```
+
+Lo que hace `@` realmente es crear un *handle*: una variable que **contiene una
+función** en lugar de un número. Y como es una variable normal, se puede pasar
+como argumento a otra función:
+
+```{matlab}
+clear all; clc;
+h = @(x) exp(-x);
+t = linspace(0, 3, 200);
+
+plot(t, h(t), 'LineWidth', 2)      % h se evalua como cualquier funcion
+xlabel('t'); ylabel('h(t)'); grid on
+title('Funcion anonima h(t) = e^{-t}')
+```
+
+::: {.callout-note}
+Esto será imprescindible en la Práctica 2: los resolvedores de ecuaciones
+diferenciales de MATLAB reciben la ecuación **como un *handle***, no como un
+archivo.
+:::
+
+::: {.ejercicio}
+Crea con `@` una función anónima `p` que calcule $p(x) = 3x^2 - 2x + 1$.
+Evalúala en $x = 2$ y represéntala para $x \in [-2, 3]$.
+:::
+
+::: {.solucion}
+```{matlab}
+clear all; close all; clc;
+p = @(x) 3*x.^2 - 2*x + 1;
+
+p(2)                          % 3*4 - 2*2 + 1 = 9
+
+x = linspace(-2, 3, 300);
+plot(x, p(x), 'LineWidth', 2)
+xlabel('x'); ylabel('p(x)'); grid on
+title('p(x) = 3x^2 - 2x + 1')
+```
+
+Fíjate en el `.^` y en que no ha hecho falta crear ningún archivo: para una
+fórmula corta como esta, la función anónima es más cómoda que un `.m`.
+:::
+
+
 # Ejercicios propuestos
 
 

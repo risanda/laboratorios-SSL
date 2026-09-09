@@ -19,6 +19,11 @@ Usa el **menú de la izquierda** para navegar entre las prácticas.
 - [**Práctica 1 — Conversión AD y DA**](lab1.qmd): muestreo, cuantización y
   reconstrucción de señales.
 
+- [**Práctica 2 — Análisis de sistemas en el dominio temporal**](lab2.qmd):
+  ecuaciones diferenciales y condiciones iniciales, resolución numérica con
+  `ode45`, respuesta natural y forzada de un circuito RC, y regímenes y
+  resonancia de un RLC serie.
+
 ## Cómo trabajar
 
 - Trabaja siempre en **scripts** (`.m`), nunca en *Live Scripts*.

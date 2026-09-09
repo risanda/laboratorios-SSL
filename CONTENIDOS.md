@@ -8,6 +8,7 @@ solapamientos o huecos.
 - [Visión de conjunto](#visión-de-conjunto)
 - [Práctica 0 — Introducción a MATLAB](#práctica-0--introducción-a-matlab)
 - [Práctica 1 — Conversión A/D y D/A](#práctica-1--conversión-ad-y-da)
+- [Práctica 2 — Análisis en el dominio temporal](#práctica-2--análisis-de-sistemas-en-el-dominio-temporal)
 - [Inventario acumulado](#inventario-acumulado)
 - [Pendientes](TODO.md) — lo que queda por resolver
 
@@ -15,16 +16,16 @@ solapamientos o huecos.
 
 ## Visión de conjunto
 
-| | Práctica 0 | Práctica 1 |
-|---|---|---|
-| **Título** | Introducción a MATLAB | Conversión A/D y D/A |
-| **Papel** | Prelab instrumental: la herramienta | Primer bloque de teoría aplicado |
-| **Formato** | Guía *follow-along* con ejercicios resueltos | Trabajo previo + trabajo de laboratorio |
-| **Ejercicios** | 14 (4 integrados + 10 propuestos), todos con solución | 12 (6 previo + 6 laboratorio) |
-| **Prerrequisito** | Ninguno | Práctica 0 |
-| **Idea vertebradora** | En un ordenador no existen las funciones continuas | Toda señal digital pasa por muestrear, cuantizar y reconstruir |
+| | Práctica 0 | Práctica 1 | Práctica 2 |
+|---|---|---|---|
+| **Título** | Introducción a MATLAB | Conversión A/D y D/A | Análisis de sistemas en el dominio temporal |
+| **Papel** | Prelab instrumental: la herramienta | Primer bloque de teoría aplicado | Del análisis de señales al de sistemas |
+| **Formato** | Guía *follow-along* con ejercicios resueltos | Trabajo previo + trabajo de laboratorio | Trabajo previo + trabajo de laboratorio |
+| **Ejercicios** | 15 (5 integrados + 10 propuestos), todos con solución | 12 (6 previo + 6 laboratorio) | 9 (5 previo + 4 laboratorio) |
+| **Prerrequisito** | Ninguno | Práctica 0 | Prácticas 0 y 1 |
+| **Idea vertebradora** | En un ordenador no existen las funciones continuas | Toda señal digital pasa por muestrear, cuantizar y reconstruir | La respuesta de un sistema sale de dos sitios: la entrada y la condición inicial |
 
-Las dos prácticas comparten un principio pedagógico explícito: el alumno **escribe
+Las tres prácticas comparten un principio pedagógico explícito: el alumno **escribe
 el código él mismo** en scripts `.m` (nunca Live Scripts), un script por ejercicio,
 y cada figura empieza con `clear all; close all; clc;`.
 
@@ -112,6 +113,16 @@ Al terminar, el alumno debe ser capaz de:
   construir un escalón, frente a la versión con `for`/`if` (incluida y comentada
   como *menos eficiente*).
 
+**8. Funciones anónimas y *handles***
+
+- El operador `@`: crear una función de una línea sin abrir un archivo `.m`.
+- Cómo se evalúa (`f(3)`) y que sigue siendo vectorizada.
+- Que la función anónima **captura** el valor que tenían las variables al
+  crearla, no el que tengan después.
+- Un *handle* es una variable que contiene una función, y por eso se puede pasar
+  como argumento a otra función. Añadido como requisito de la P2, donde `ode45`
+  recibe la ecuación diferencial en esa forma.
+
 ### Ejercicios
 
 Integrados en el texto:
@@ -120,6 +131,8 @@ Integrados en el texto:
 2. Superponer $\sin(2\pi t)$ y $e^{-t}\sin(2\pi t)$ en $[0,3]$ con estilos y leyenda.
 3. `subplot` 2×1 con $\cos(2\pi t)$ y $|\cos(2\pi t)|$.
 4. Escribir la función `escalon(t, t0)` y representarla para $t_0 = 1$.
+5. Definir con `@` la función anónima $p(x) = 3x^2 - 2x + 1$, evaluarla y
+   representarla.
 
 Propuestos, de menor a mayor dificultad:
 
@@ -291,27 +304,143 @@ Ejercicios del trabajo previo:
 
 ---
 
+## Práctica 2 — Análisis de sistemas en el dominio temporal
+
+El salto conceptual de la asignatura: se deja de manipular señales para estudiar
+**sistemas**, resolviendo la ecuación diferencial que los describe. Todo con
+`ode45`, sin `lsim` ni Symbolic Math Toolbox.
+
+### Objetivos
+
+Al terminar, el alumno debe ser capaz de:
+
+- Reconocer una ecuación diferencial y entender por qué su solución es una
+  función y no un número, y qué papel juegan las **condiciones iniciales**.
+- Resolver numéricamente ecuaciones de primer y segundo orden con `ode45`,
+  escribiendo la ecuación como función anónima.
+- **Reducir** una ecuación de segundo orden a un sistema de dos de primer orden
+  mediante un vector de estado.
+- Distinguir la **respuesta natural** de la **respuesta forzada**.
+- Identificar los tres **regímenes** de un sistema de segundo orden y
+  relacionarlos con el **factor de calidad**.
+- Observar el efecto de la **resonancia** en un circuito RLC serie.
+
+### Contenidos: trabajo previo
+
+La progresión de los conceptos es deliberada: primero condiciones iniciales sin
+entrada, después entrada externa con condiciones iniciales nulas.
+
+**1. Qué es una ecuación diferencial**
+
+- La incógnita es una función, no un número; la solución es una familia y hace
+  falta una condición inicial para concretarla.
+- Tabla comparativa con la ecuación algebraica.
+- Comprobación de una solución por sustitución.
+
+**2. Sistemas de primer orden: velocidad en caída libre**
+
+- $v'(t) = g$, sin entrada: lo único que selecciona una solución es $v(0) = v_0$.
+- Convenio de signos de toda la práctica: posición hacia arriba, suelo en el
+  origen, $g = -9.81\ \mathrm{m/s^2}$.
+- Sintaxis de `ode45`: *handle*, `tspan` y condición inicial.
+
+**3. Sistemas de segundo orden: posición en caída libre**
+
+- $y''(t) = g$ con dos condiciones iniciales; la parábola analítica.
+- El **vector de estado** $z = [y;\ v]$ y la reducción a dos ecuaciones de primer
+  orden, que es el objetivo real del apartado y lo que exige el RLC.
+- La función anónima devuelve ahora un vector columna.
+
+**4. Entradas exógenas: carga de un circuito RC**
+
+- Primera aparición de una **entrada externa**. Circuito dibujado con CircuiTikZ.
+- $RC\,y' + y = x$, constante de tiempo $\tau = RC$.
+- Carga con condiciones iniciales nulas y escalón de 10 V: respuesta forzada,
+  $y(t) = E(1 - e^{-t/\tau})$, con el 63 % alcanzado en $t = \tau$.
+- Reutilización de la función `escalon` de la P0 para construir la entrada.
+
+**5. Introducción al circuito RLC serie**
+
+- Circuito dibujado con CircuiTikZ. **La salida es la tensión en la
+  resistencia**, que es lo que lo convierte en filtro paso banda.
+- $LC\,v_C'' + RC\,v_C' + v_C = x$, con $v_R = RC\,v_C'$.
+- $\alpha = R/2L$, $\omega_0 = 1/\sqrt{LC}$ y los tres regímenes.
+- Resonancia: en $f_0$ las reactancias se cancelan y toda la entrada aparece en
+  la resistencia, con ganancia 1 y sin desfase, sea cual sea $R$.
+- Factor de calidad $Q = \omega_0 L/R$, ancho de banda $\approx f_0/Q$, y el
+  puente entre los dos bloques: $Q = \omega_0/2\alpha$, así que más $Q$ es a la
+  vez más selectivo y más oscilante.
+
+Ejercicios del trabajo previo:
+
+1. Clasificar ecuaciones en algebraicas y diferenciales; comprobar una solución
+   por sustitución y deducir su condición inicial.
+2. Resolver la velocidad con `ode45` para dos condiciones iniciales distintas.
+3. Resolver la posición con `ode45` usando el vector de estado.
+4. Carga del RC con `ode45` y entrada construida con `escalon`.
+5. Calcular $\alpha$, $\omega_0$ y $Q$ para tres valores de $R$ y clasificar el
+   régimen de cada configuración, solo a mano.
+
+### Contenidos: trabajo de laboratorio
+
+Todo con `ode45`; las expresiones analíticas se dan hechas para superponerlas.
+
+6. **Descarga del RC**: respuesta natural, sin entrada y con el condensador
+   cargado a 10 V. Queda el 37 % en $t = \tau$, imagen especular del 63 % de la
+   carga. Cierra el contraste entrada frente a condición inicial.
+7. **El RC como filtro**: senoides de 50 Hz y 1 kHz sobre un circuito con
+   $f_c \approx 159$ Hz, cada una con su intervalo de simulación. Ganancias
+   medidas 0.954 y 0.157, coincidentes con la teoría. Sirve además para ver la
+   diferencia entre transitorio y régimen permanente.
+8. **RLC: los tres regímenes ante un escalón**: las tres configuraciones
+   superpuestas en una gráfica. El resultado contraintuitivo de la sesión es que
+   el sobreamortiguado es el más lento pese a tener más resistencia (constantes
+   dominantes de 200, 100 y 479 µs).
+9. **RLC: resonancia**: con $R = 100\ \Omega$ (mayor $Q$), senoides a 500 Hz,
+   1592 Hz y 5000 Hz. Ganancias 0.329, 0.996 y 0.334: en resonancia la salida
+   iguala a la entrada y cae de forma parecida a ambos lados. Cierra con un
+   callout situando el diagrama de Bode como lo que vendrá después.
+
+### Aprendizajes
+
+- **Instrumentales**: escribir una ecuación diferencial como *handle*; manejar
+  `ode45` y su vector de condiciones iniciales; construir entradas como funciones
+  anónimas y cambiarlas sin tocar el resto; medir sobre el régimen permanente y
+  no sobre el transitorio.
+- **Conceptuales**: la condición inicial no es burocracia, es lo que concreta la
+  solución; toda respuesta se descompone en natural y forzada; un sistema de
+  segundo orden tiene tres comportamientos cualitativamente distintos según quién
+  gane entre disipación y oscilación; amortiguamiento y selectividad en
+  frecuencia son la misma propiedad vista de dos maneras.
+- **Puentes**: la reducción a vector de estado prepara el espacio de estados; la
+  resonancia y el paso banda anticipan la respuesta en frecuencia y el diagrama
+  de Bode, señalados explícitamente como materia posterior.
+
+---
+
 ## Inventario acumulado
 
 **Comandos de MATLAB introducidos**
 
-| Bloque | P0 | P1 |
-|---|---|---|
-| Entorno | `clc`, `clear`, `close all`, `help`, `doc` | — |
-| Vectores | `:`, `linspace`, `[]`, `length`, `end`, `zeros`, `size` | — |
-| Operadores | `.*`, `./`, `.^` | — |
-| Matemáticas | `sin`, `cos`, `exp`, `log`, `sqrt`, `abs`, `sum`, `conv`, `square`, `randn`, `rng`, `double` | `round`, `floor`, `min`, `max`, `log10`, `sinc` |
-| Gráficas | `plot`, `stem`, `stairs`, `hold`, `legend`, `xlabel`, `ylabel`, `title`, `grid`, `xlim`, `ylim`, `axis`, `subplot` | — |
-| Control y E/S | `function`, `for`, `if` | `fprintf`, `sprintf`, `audioread`, `sound` |
+| Bloque | P0 | P1 | P2 |
+|---|---|---|---|
+| Entorno | `clc`, `clear`, `close all`, `help`, `doc` | — | — |
+| Vectores | `:`, `linspace`, `[]`, `length`, `end`, `zeros`, `size` | — | — |
+| Operadores | `.*`, `./`, `.^` | — | — |
+| Matemáticas | `sin`, `cos`, `exp`, `log`, `sqrt`, `abs`, `sum`, `conv`, `square`, `randn`, `rng`, `double` | `round`, `floor`, `min`, `max`, `log10`, `sinc` | — |
+| Gráficas | `plot`, `stem`, `stairs`, `hold`, `legend`, `xlabel`, `ylabel`, `title`, `grid`, `xlim`, `ylim`, `axis`, `subplot` | — | — |
+| Control y E/S | `function`, `for`, `if` | `fprintf`, `sprintf`, `audioread`, `sound` | — |
+| Funciones y EDO | `@` (anónimas y *handles*) | — | `ode45` |
 
 **Funciones que escribe el alumno** (activo reutilizable entre prácticas)
 
 | Función | Origen | Reutilizada en |
 |---|---|---|
 | `senoide(A, f, t)` | P0 (ejemplo) | — |
-| `escalon(t, t0)` | P0 (ej. 4) | — |
+| `escalon(t, t0)` | P0 (ej. 4) | P2 (previo ej. 4; laboratorio ej. 8) |
 | `pulso(t, A, dur, retardo)` | P0 (ej. 8) | P0 (ej. 11) |
 | `energia_potencia(x)` | P0 (ej. 13) | — |
+| `p(x)` anónima | P0 (ej. 5) | patrón reutilizado en toda la P2 |
 | `calcula_sqnr(x, xq)` | P1 previo (ej. 4) | P1 laboratorio (ej. 8, 9) |
 | `interp_ideal(xn, tn, tc)` | P1 laboratorio (ej. 10) | P1 (ej. 11, 12) |
 
@@ -322,4 +451,7 @@ Proporcionadas ya escritas: `cuant_redondeo`, `cuant_truncamiento`, `interp_zoh`
 Potencia media y energía · convolución y sistemas LTI · escalón unitario y pulso ·
 serie de Fourier y fenómeno de Gibbs · media móvil como filtro · muestreo ·
 aliasing y filtro anti-aliasing · Nyquist-Shannon · cuantización uniforme · SQNR y
-regla de 6 dB/bit · ZOH e interpolación sinc.
+regla de 6 dB/bit · ZOH e interpolación sinc · ecuación diferencial y condiciones
+iniciales · vector de estado y reducción de orden · respuesta natural y forzada ·
+constante de tiempo · transitorio y régimen permanente · filtro paso bajo y paso
+banda · regímenes de segundo orden · resonancia y factor de calidad.
