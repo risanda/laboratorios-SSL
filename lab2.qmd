@@ -23,15 +23,13 @@ Al terminar deberías ser capaz de:
 
 - Reconocer una **ecuación diferencial** y entender por qué su solución es una
   función y no un número, y qué papel juegan las **condiciones iniciales**.
-- Resolver numéricamente ecuaciones de primer y segundo orden con `ode45`,
-  escribiendo la ecuación como una función anónima.
+- **Resolver numéricamente** ecuaciones de primer y segundo orden con `ode45`.
 - **Reducir** una ecuación de segundo orden a un sistema de dos de primer orden
   mediante un vector de estado.
 - Distinguir la **respuesta natural** (la que produce la energía almacenada) de
   la **respuesta forzada** (la que produce la entrada).
 - Identificar los tres **regímenes** de un sistema de segundo orden
-  (sobreamortiguado, crítico y subamortiguado) y relacionarlos con el **factor
-  de calidad**.
+  (sobreamortiguado, crítico y subamortiguado) y relacionarlos con las **raíces o polos** de la ecuación característica
 - Observar el efecto de la **resonancia** en un circuito RLC serie.
 
 ## Estructura de la práctica
@@ -52,36 +50,30 @@ misma carpeta para que MATLAB las encuentre. Vas a necesitar la función
 
 # Trabajo previo
 
-## Qué es una ecuación diferencial
+## Ecuaciones diferenciales
 
 Hasta ahora, cuando resolvías una ecuación buscabas un **número**. Al resolver
-$3x - 6 = 0$ encuentras que $x = 2$, y ahí se acaba el problema.
+$3x  = 6$ encuentras que $x = 2$, y ahí se acaba el problema. Podríamos leer esta ecuación como: "*busca un número que multiplicado por 3 sea igual a 6*". La incógnita es un número, y la ecuación relaciona ese número con otros números mediante operaciones algebraicas.
 
 Una **ecuación diferencial** es distinta: la incógnita es una **función**, y la
 ecuación relaciona esa función con sus derivadas. Por ejemplo,
-$$ y'(t) = -2\,y(t) $$
-no pregunta por un número, sino por *qué función* tiene la propiedad de que su
-derivada sea, en cada instante, menos el doble de su valor.
+$$ y'(t) = -\,y(t) $$
+no tiene por solución un número. Podríamos leer esta ecuación como: "*busca una cuya derivada sea, en cada instante, su propio valor cambiado de signo*". Esta ecuación en concreto podría describir, por ejemplo, la velocidad de enfriamiento de un objeto: cuanto más caliente está, más rápido pierde calor. Siguiendo esta analogía, fíjate que **necesitamos un punto de partida** para definir completamente el problema. Sabemos cómo se enfría el objeto, pero necesitamos su temperatura inicial. A esto se le llama **condición inicial**, y la denotamos como $y(0)$.
 
 | | Ecuación algebraica | Ecuación diferencial |
 |---|---|---|
 | Incógnita | un número | una función |
-| Ejemplo | $3x - 6 = 0$ | $y'(t) = -2y(t)$ |
-| Solución | $x = 2$ | $y(t) = K e^{-2t}$, para cualquier $K$ |
-| Cuántas soluciones | normalmente una | una **familia** infinita |
+| Ejemplo | $3x - 6 = 0$ | $y'(t) = -y(t)$ |
+| Solución | $x = 2$ | $y(t) = K e^{-t}$ |
+| Cuántas soluciones | un conjunto finito | una **familia** infinita |
 | Para concretarla | nada más | hace falta una **condición inicial** |
-| Cómo se comprueba | sustituyendo | derivando y sustituyendo |
+| Comprobación | sustituyendo | derivando y sustituyendo |
 
+Ya deberías saber que la solución de la ecuación diferencial $y'(t) = -y(t)$ es $y(t) = K e^{-t}$, donde $K$ es una constante.
+La solución de una ecuación algebraica es muy fácil de verificar. Se sustituye el número en la ecuación y se comprueba que se cumple. Ocure lo mismo con las ecuaciones diferenciales.
 La última fila de la tabla es importante y es la misma en los dos casos: una
-solución se comprueba sustituyéndola en la ecuación. Si decimos que
-$y(t) = K e^{-2t}$ resuelve $y' = -2y$, basta con derivar,
-$y'(t) = -2K e^{-2t}$, y ver que en efecto es igual a $-2\,y(t)$.
-
-Que la solución sea una familia y no una función concreta no es un defecto:
-significa que la ecuación describe el **comportamiento** del sistema, y hace
-falta un dato más para saber en cuál de todas las evoluciones posibles estamos.
-Ese dato es la **condición inicial**. Si además sabemos que $y(0) = 5$, entonces
-$K = 5$ y ya hay una única solución.
+solución se comprueba sustituyéndola en la ecuación. Basta con derivar,
+$y'(t) = -K e^{-t}$, y ver que en efecto es igual a $-y(t)$. La constante $K$ se puede determinar fácilmente si se conoce la condición inicial.
 
 ::: {.ejercicio}
 Clasifica estas ecuaciones en algebraicas y diferenciales:
@@ -109,9 +101,9 @@ Se cumple, luego es solución. La condición inicial se obtiene evaluando en
 $t = 0$: como $y(0) = 4e^{0} = 4$, la condición es $y(0) = 4$.
 :::
 
-## Sistemas de primer orden: velocidad en caída libre
+## Sistemas de primer orden
 
-Empecemos por el sistema físico más simple que existe: un objeto que cae. Si
+Empecemos por uno de los **sistemas** más simples que podemos imaginar: un objeto que cae. Si
 llamamos $v(t)$ a su velocidad, la segunda ley de Newton dice que
 $$ v'(t) = g $$
 Es una ecuación diferencial de primer orden, porque solo aparece la primera
@@ -119,35 +111,31 @@ derivada.
 
 :::{.callout-important}
 ## Convenio de signos
-En toda esta práctica la posición se mide **hacia arriba** y el suelo es el
-origen, $y = 0$. Como la gravedad tira hacia abajo, es **negativa**:
-$g = -9.81\ \mathrm{m/s^2}$. Con este convenio, $v_0 > 0$ es una pelota lanzada
-hacia arriba y $v_0 = 0$ una pelota que simplemente se deja caer.
+Mediremos la posición hacia arriba y tomaremos el suelo como origen de coordenadas ($x = 0$). El signo negativo queda contenido en $g = -9.81\ \mathrm{m/s^2}$. Con este convenio, $v(0) > 0$ sería una pelota lanzada
+hacia arriba y $v(0) = 0$ una pelota que simplemente se deja caer libremente.
 :::
 
-Fíjate en que aquí **no hay ninguna señal de entrada**: nadie está actuando
-sobre la pelota. La ecuación por sí sola no basta para saber qué velocidad
-tendrá la pelota dentro de dos segundos, porque su solución es toda una familia
-de rectas:
+La solución a esta ecuación diferencial puede obtenerse directamente por integración, obteniendo
 $$ v(t) = v_0 + g\,t $$
-Lo que selecciona una de ellas es la **condición inicial** $v(0) = v_0$. No es
-un detalle administrativo que MATLAB nos exija por capricho: sin ella el
-problema está genuinamente incompleto.
+donde $v_0$ es la velocidad inicial.
 
 ### Resolución numérica con `ode45`
 
-MATLAB resuelve ecuaciones diferenciales con `ode45`. Se usa así:
+MATLAB resuelve ecuaciones diferenciales con la función`ode45`. Se usa así:
 
 ```matlab
 [t, y] = ode45(edo, tspan, y0)
 ```
 
-donde `edo` es una **función anónima** que recibe el instante `t` y el valor
-actual `y`, y devuelve la derivada `y'`; `tspan` es el intervalo de tiempo
-`[t_inicial t_final]`; e `y0` es la condición inicial. Devuelve el vector de
-instantes `t` y el de valores `y`, listos para dibujar.
+donde:
 
-Aquí la derivada vale siempre `g`, así que la ecuación se escribe en una línea:
+- `edo` es una **función anónima** que recibe el instante `t` y el valor
+actual `y`, y devuelve la derivada `y'`
+-  `tspan` es el intervalo de tiempo
+`[t_inicial t_final]`
+- `y0` es la condición inicial
+- los valore devueltos on el vector de instantes `t` y el de valores `y`, listos para dibujar
+
 
 ```{matlab}
 clear all; close all; clc;
@@ -163,12 +151,13 @@ plot(t, v, 'g--', 'LineWidth', 2)            % solucion de ode45
 hold off
 xlabel('t (s)'); ylabel('v(t) (m/s)'); grid on
 title('Velocidad en caida libre')
-legend('analitica', 'ode45', 'Location', 'southwest')
+legend('analitica', 'ode45')
 ```
 
-Las dos curvas se superponen porque `ode45` resuelve bien un problema tan
-sencillo. Lo interesante es la mecánica: hemos descrito el sistema con una
-función anónima y MATLAB ha hecho el resto.
+Las dos curvas se superponen porque `ode45` resuelve perfectamente un problema tan
+sencillo. Lo importante aquí es el procedimiento. Ahora ya sabes cómo resolver cualquier ecuación diferencial de primer orden con Matlab.
+
+
 
 ::: {.ejercicio}
 Resuelve con `ode45` la misma ecuación para **dos condiciones iniciales**
@@ -209,38 +198,38 @@ segunda pelota tarda algo más de 1.5 s en frenarse (cuando $v$ cruza el cero) y
 a partir de ahí cae como la primera.
 :::
 
-## Sistemas de segundo orden: posición en caída libre
+## Sistemas de orden superior
 
-Si en lugar de la velocidad queremos la **posición** $y(t)$, la ecuación pasa a
+Si en lugar de la velocidad queremos la **posición** $x(t)$, la ecuación pasa a
 ser de segundo orden, porque la aceleración es la segunda derivada de la
 posición:
-$$ y''(t) = g $$
+$$ x''(t) = g $$
 
 Tampoco hay entrada aquí. Lo que sí hay ahora son **dos** condiciones
 iniciales, la posición y la velocidad de partida, y la solución analítica es la
 parábola
-$$ y(t) = y_0 + v_0\,t + \tfrac{1}{2}g\,t^2 $$
-que con nuestro convenio de signos es cóncava hacia abajo y cruza el cero cuando
-la pelota llega al suelo.
+$$ x(t) = x_0 + v_0\,t + \tfrac{1}{2}g\,t^2 $$
+que con nuestro convenio de signos es cóncava hacia abajo y cruza el cero cuando la pelota llega al suelo. Debería resultar familiar, puesto que es la ecuación de un movimiento rectilíneo uniformemente acelerado. 
 
-### El vector de estado
 
 Y aquí aparece el punto importante de este apartado, que necesitarás en el
-laboratorio: **`ode45` solo sabe resolver ecuaciones de primer orden**. Para
-usarlo con una de segundo orden hay que convertirla antes en un **sistema de dos
-ecuaciones de primer orden**.
+laboratorio: la función `ode45` de Matlab **solamente sabe resolver ecuaciones de primer orden**. Para
+usarlo con una de orden superior, primero hay que **reducirla a un sistema de ecuaciones de primer orden**.
 
 El truco consiste en agrupar en un vector, llamado **vector de estado**, la
-función y sus derivadas hasta una menos que el orden. Aquí:
+función y sus derivadas hasta una menos que el orden. Definimos $z_1 = x$ y $z_2 = x'$, y las agrupaoms en un vector columna $z$, tal que:
 $$ z = \begin{bmatrix} z_1 \\ z_2 \end{bmatrix}
-     = \begin{bmatrix} y \\ v \end{bmatrix} $$
+     = \begin{bmatrix} x \\ x' \end{bmatrix} $$
 
 Con ese cambio, la ecuación de segundo orden se parte en dos de primer orden:
-$$ z_1' = z_2 \qquad\text{(la derivada de la posición es la velocidad)} $$
-$$ z_2' = g \qquad\text{(la derivada de la velocidad es la aceleración)} $$
+$$ z_1' = z_2 $$
+$$ z_2' = g $$
 
-La primera no es más que la definición de velocidad; la segunda es la ecuación
-original. En MATLAB, la función anónima devuelve ahora un **vector columna** con
+La primera no es más que la definición de velocidad; la segunda es la ecuación original. Para una mejor comprensión, podemos reescribirlo en forma matricial:
+$$ \frac{\mathrm{d}}{\mathrm{d}t} \begin{bmatrix} z_1 \\ z_2 \end{bmatrix} = \begin{bmatrix} z_2 \\ g \end{bmatrix} $$  
+
+
+En MATLAB, la función anónima devuelve ahora un **vector columna** con
 las dos derivadas, y la condición inicial también es un vector de dos
 componentes:
 
@@ -254,7 +243,7 @@ segunda la velocidad.
 
 ::: {.ejercicio}
 Una pelota se lanza hacia arriba desde una altura de 20 m con una velocidad
-inicial de 15 m/s. Resuelve su posición con `ode45` durante 4 s y compárala con
+inicial de 15 m/s. Resuelve su posición con `ode45` durante 4.5 s y compárala con
 la parábola analítica. Dibuja también la línea del suelo para ver dónde
 aterriza.
 :::
@@ -267,7 +256,7 @@ y0 = 20;                       % altura inicial (m)
 v0 = 15;                       % velocidad inicial hacia arriba (m/s)
 
 edo = @(t, z) [z(2); g];       % z = [posicion; velocidad]
-[t, z] = ode45(edo, [0 4], [y0; v0]);
+[t, z] = ode45(edo, [0 4.5], [y0; v0]);
 y = z(:,1);                    % primera columna: la posicion
 
 plot(t, y0 + v0*t + 0.5*g*t.^2, 'b-', 'LineWidth', 2)   % analitica
@@ -280,17 +269,15 @@ title('Posicion de una pelota lanzada hacia arriba')
 legend('analitica', 'ode45', 'suelo', 'Location', 'southwest')
 ```
 
-La pelota sube durante aproximadamente 1.5 s, alcanza unos 31 m y luego cae,
-cruzando el suelo algo después de los 3.5 s. A partir de ese punto la
+La pelota sube durante aproximadamente 1.5 s, alcanza unos 31 m y luego cae, llegando al suelo a los 4 s aproximadamente. A partir de ese punto la
 simulación deja de tener sentido físico, porque el modelo no sabe nada del
 suelo: sigue integrando la misma ecuación como si la pelota lo atravesara.
 :::
 
 ## Entradas exógenas: carga de un circuito RC
 
-Hasta ahora las respuestas venían de la condición inicial. En este apartado
-aparece por primera vez algo distinto: una **señal de entrada** que actúa sobre
-el sistema desde fuera.
+Hasta ahora las respuestas venían de la condición inicial: esto es lo que llamamos la **respuesta libre** de un sistema. En este apartado
+aparece por primera vez algo distinto: una **señal de entrada** que **fuerza** al sistema desde fuera, dando lugar a una **respuesta forzada**.
 
 Considera este circuito RC, donde la entrada es la tensión de la fuente $x(t)$ y
 la salida es la tensión en el condensador $y(t)$:
