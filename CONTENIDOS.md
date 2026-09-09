@@ -21,7 +21,7 @@ solapamientos o huecos.
 | **Título** | Introducción a MATLAB | Conversión A/D y D/A | Análisis de sistemas en el dominio temporal |
 | **Papel** | Prelab instrumental: la herramienta | Primer bloque de teoría aplicado | Del análisis de señales al de sistemas |
 | **Formato** | Guía *follow-along* con ejercicios resueltos | Trabajo previo + trabajo de laboratorio | Trabajo previo + trabajo de laboratorio |
-| **Ejercicios** | 15 (5 integrados + 10 propuestos), todos con solución | 12 (6 previo + 6 laboratorio) | 9 (5 previo + 4 laboratorio) |
+| **Ejercicios** | 15 (5 integrados + 10 propuestos), todos con solución | 12 (6 previo + 6 laboratorio) | 10 (6 previo + 4 laboratorio) |
 | **Prerrequisito** | Ninguno | Práctica 0 | Prácticas 0 y 1 |
 | **Idea vertebradora** | En un ordenador no existen las funciones continuas | Toda señal digital pasa por muestrear, cuantizar y reconstruir | La respuesta de un sistema sale de dos sitios: la entrada y la condición inicial |
 
@@ -375,28 +375,34 @@ Ejercicios del trabajo previo:
 
 1. Clasificar ecuaciones en algebraicas y diferenciales; comprobar una solución
    por sustitución y deducir su condición inicial.
-2. Resolver la velocidad con `ode45` para dos condiciones iniciales distintas.
+2. Resolver la velocidad en caída libre con `ode45` y superponer la solución
+   analítica.
 3. Resolver la posición con `ode45` usando el vector de estado.
-4. Carga del RC con `ode45` y entrada construida con `escalon`.
-5. Calcular $\alpha$, $\omega_0$ y $Q$ para tres valores de $R$ y clasificar el
+4. Dos pelotas con la misma ecuación y distinta condición inicial, una que se
+   deja caer desde 20 m y otra lanzada desde el suelo a 20 m/s: determinar
+   **sobre la gráfica** cuándo se cruzan. El término de la gravedad se cancela al
+   restar las dos posiciones, así que el encuentro ocurre en $t = h/v_0 = 1$ s
+   con independencia de $g$.
+5. Carga del RC con `ode45` y entrada construida con `escalon`.
+6. Calcular $\alpha$, $\omega_0$ y $Q$ para tres valores de $R$ y clasificar el
    régimen de cada configuración, solo a mano.
 
 ### Contenidos: trabajo de laboratorio
 
 Todo con `ode45`; las expresiones analíticas se dan hechas para superponerlas.
 
-6. **Descarga del RC**: respuesta natural, sin entrada y con el condensador
+7. **Descarga del RC**: respuesta natural, sin entrada y con el condensador
    cargado a 10 V. Queda el 37 % en $t = \tau$, imagen especular del 63 % de la
    carga. Cierra el contraste entrada frente a condición inicial.
-7. **El RC como filtro**: senoides de 50 Hz y 1 kHz sobre un circuito con
+8. **El RC como filtro**: senoides de 50 Hz y 1 kHz sobre un circuito con
    $f_c \approx 159$ Hz, cada una con su intervalo de simulación. Ganancias
    medidas 0.954 y 0.157, coincidentes con la teoría. Sirve además para ver la
    diferencia entre transitorio y régimen permanente.
-8. **RLC: los tres regímenes ante un escalón**: las tres configuraciones
+9. **RLC: los tres regímenes ante un escalón**: las tres configuraciones
    superpuestas en una gráfica. El resultado contraintuitivo de la sesión es que
    el sobreamortiguado es el más lento pese a tener más resistencia (constantes
    dominantes de 200, 100 y 479 µs).
-9. **RLC: resonancia**: con $R = 100\ \Omega$ (mayor $Q$), senoides a 500 Hz,
+10. **RLC: resonancia**: con $R = 100\ \Omega$ (mayor $Q$), senoides a 500 Hz,
    1592 Hz y 5000 Hz. Ganancias 0.329, 0.996 y 0.334: en resonancia la salida
    iguala a la entrada y cae de forma parecida a ambos lados. Cierra con un
    callout situando el diagrama de Bode como lo que vendrá después.

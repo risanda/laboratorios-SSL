@@ -124,24 +124,28 @@ donde $v_0$ es la velocidad inicial.
 MATLAB resuelve ecuaciones diferenciales con la función `ode45`. Se usa así:
 
 ```matlab
-[t, y] = ode45(edo, tspan, y0)
+[t, y] = ode45(edo, [t_inicial, t_final], y0)
 ```
 
 donde:
 
 - `edo` es una **función anónima** que recibe el instante `t` y el valor
 actual `y`, y devuelve la derivada `y'`
--  `tspan` es el intervalo de tiempo
-`[t_inicial t_final]`
+-  `[t_inicial, t_final]` es el intervalo de tiempo
 - `y0` es la condición inicial
 - los valores devueltos son el vector de instantes `t` y el de valores `y`, listos para dibujar
 
-
+Para el caso de la caída libre, la función anónima es muy sencilla:
+```matlab
+edo = @(t, v) g;              % la ecuacion diferencial v' = g
+```
 ::: {.ejercicio}
 Resuelve con `ode45` la ecuación $v'(t) = g$ en el intervalo $[0, 3]$ s para una
 pelota que se deja caer, es decir, con $v(0) = 0$. Superpón la solución
 analítica $v(t) = v_0 + g\,t$ y comprueba que ambas coinciden.
 :::
+
+
 
 ::: {.solucion}
 ```{matlab}
@@ -163,6 +167,11 @@ legend('analitica', 'ode45')
 
 Las dos curvas se superponen porque `ode45` resuelve perfectamente un problema tan
 sencillo. Lo importante aquí es el procedimiento. Ahora ya sabes cómo resolver cualquier ecuación diferencial de primer orden con Matlab.
+:::
+
+:::{.callout-note}
+## El vector de tiempos con `ode45`
+Al especificar `[t_inicial, t_final]`, la función `ode45` devuelve un vector de instantes `t` en ese rango pero que no está uniformemente espaciado. Calcula internamente los pasos de integración para mantener la precisión, y devuelve los instantes que le conviene. Alternativamente, es posible pedirle que devuelva los valores en un vector de instantes predefinido, si se desea.
 :::
 
 ## Sistemas de orden superior
@@ -240,6 +249,59 @@ La pelota sube durante aproximadamente 1.5 s, alcanza unos 31 m y luego cae, lle
 simulación deja de tener sentido físico, porque el modelo no sabe nada del
 suelo: sigue integrando la misma ecuación como si la pelota lo atravesara.
 :::
+
+La misma ecuación sirve para dos pelotas distintas: basta con cambiarle la
+condición inicial.
+
+::: {.ejercicio}
+Desde lo alto de un edificio de 20 m se deja caer una pelota. En ese mismo
+instante, desde el suelo y justo debajo, se lanza otra hacia arriba con una
+velocidad inicial de 20 m/s.
+
+Resuelve las dos trayectorias con `ode45` durante 2 s y dibújalas superpuestas
+en la misma gráfica, junto con la línea del suelo. **A partir de la gráfica**,
+determina en qué instante se cruzan las dos pelotas y a qué altura ocurre.
+:::
+
+::: {.solucion}
+```{matlab}
+%| echo: false
+clear all; close all; clc;
+g = -9.81;
+
+edo = @(t, z) [z(2); g];                  % z = [posicion; velocidad]
+
+[tA, zA] = ode45(edo, [0 2], [20;  0]);   % se deja caer desde 20 m
+[tB, zB] = ode45(edo, [0 2], [ 0; 20]);   % se lanza desde el suelo
+
+plot(tA, zA(:,1), 'g-', 'LineWidth', 2)
+hold on
+plot(tB, zB(:,1), 'r-', 'LineWidth', 2)
+plot(tA, zeros(size(tA)), 'k:', 'LineWidth', 1.5)
+hold off
+xlabel('t (s)'); ylabel('altura (m)'); grid on
+title('Dos pelotas que se cruzan')
+legend('se deja caer desde 20 m', 'lanzada desde el suelo', 'suelo', ...
+       'Location', 'south')
+```
+
+Las dos curvas se cortan en $t = 1$ s, a unos 15 m de altura. En ese momento
+ninguna de las dos ha terminado su recorrido: la que sube todavía tardará un
+segundo más en alcanzar su punto más alto, y la que cae aún no ha llegado al
+suelo.
+
+Hay un detalle que merece la pena mirar. Las dos pelotas obedecen **la misma
+ecuación diferencial** y solo se diferencian en la condición inicial, así que sus
+posiciones son
+$$ x_A(t) = h + \tfrac{1}{2}g\,t^2 \qquad\qquad x_B(t) = v_0\,t + \tfrac{1}{2}g\,t^2 $$
+Al restarlas para buscar el cruce, el término de la gravedad **se cancela**:
+$$ x_A(t) - x_B(t) = h - v_0\,t = 0 \quad\Longrightarrow\quad t = \frac{h}{v_0}
+   = \frac{20}{20} = 1\ \mathrm{s} $$
+El instante del encuentro no depende de $g$: las dos pelotas caen exactamente
+igual, así que se acercan entre sí a velocidad constante $v_0$. En la Luna se
+cruzarían en el mismo instante, aunque a mucha más altura.
+:::
+
 
 ## Entradas exógenas: carga de un circuito RC
 
