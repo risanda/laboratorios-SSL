@@ -40,9 +40,6 @@ Al terminar, el alumno debe ser capaz de:
 - Utilizar todos los comandos básicos de representación gráfica.
 - Entender que **en un ordenador no existen las funciones continuas**: lo que se ve
   como una curva es un conjunto de puntos próximos unidos por segmentos rectos.
-- Muestrear una señal, representarla con `stem` y reconocer el aliasing.
-  *(Ver [Huecos detectados](#huecos-detectados): este objetivo no llega a
-  desarrollarse en la práctica.)*
 
 ### Contenidos
 
@@ -335,15 +332,10 @@ Puntos a resolver, relevantes para planificar las prácticas siguientes:
 
 1. **Falta el archivo `p44100.wav`.** El ejercicio 8 de la P1 lo carga con
    `audioread` y no está en el repositorio; el alumno no puede ejecutarlo.
-2. **Objetivo de la P0 no cumplido.** Entre los objetivos declarados figura
-   "muestrear una señal, representarla con `stem` y reconocer el **aliasing**",
-   pero la palabra *aliasing* no vuelve a aparecer en toda la práctica: el
-   concepto se introduce en la P1. O se añade una demostración breve en la P0, o
-   se retira el objetivo.
-3. **Objetivos declarados sin verificación explícita.** Ninguna de las dos
+2. **Objetivos declarados sin verificación explícita.** Ninguna de las dos
    prácticas incluye entregable, rúbrica ni criterio de evaluación; conviene
    decidir el formato antes de escribir la P2.
-4. **La numeración de ejercicios es implícita.** El filtro `callouts.lua` numera
+3. **La numeración de ejercicios es implícita.** El filtro `callouts.lua` numera
    automáticamente, pero el texto de la P1 remite a "tu solución del Ejercicio 6".
    Al insertar el ejercicio de muestreo esa referencia ha seguido siendo válida
    por estar en el trabajo previo, pero es frágil ante la siguiente inserción. Merece la pena usar
