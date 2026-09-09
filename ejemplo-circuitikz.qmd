@@ -1,0 +1,30 @@
+---
+title: "Ejemplo: circuitos con CircuiTikZ"
+number-sections: false
+toc: false
+---
+
+Página de prueba del filtro `tikz.lua`. El mismo bloque de código produce un
+circuito vectorial en **HTML** (compilado a SVG) y en **PDF** (LaTeX nativo).
+
+Un filtro RC paso bajo, el sistema LTI de primer orden de la asignatura:
+
+```{.tikz width="55%"}
+\begin{circuitikz}[scale=1.1, transform shape]
+  \draw (0,0) to[V, l=$x(t)$] (0,2) -- (2,2)
+        to[R, l=$R$] (4,2) -- (4,0)
+        to[C, l=$C$, v^>=$y(t)$] (0,0);
+\end{circuitikz}
+```
+
+Se escribe así:
+
+````markdown
+```{.tikz width="55%"}
+\begin{circuitikz}[scale=1.1, transform shape]
+  \draw (0,0) to[V, l=$x(t)$] (0,2) -- (2,2)
+        to[R, l=$R$] (4,2) -- (4,0)
+        to[C, l=$C$, v^>=$y(t)$] (0,0);
+\end{circuitikz}
+```
+````

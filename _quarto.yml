@@ -1,6 +1,8 @@
 project:
   type: website
   output-dir: _site
+  render:
+    - "*.qmd"        # CONTENIDOS.md y TODO.md son notas internas, no páginas
 
 website:
   title: "Señales y Sistemas Lineales — Prácticas"
@@ -21,6 +23,7 @@ subtitle: "Señales y Sistemas Lineales"
 jupyter: jupyter_matlab_kernel
 filters:
   - callouts.lua
+  - tikz.lua
 
 execute:
   echo: true

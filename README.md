@@ -26,12 +26,15 @@ izquierdo** para navegar entre labs; cada lab se puede descargar además en **PD
 - `index.qmd` — portada del sitio.
 - `lab0.qmd`, `lab1.qmd`, … — las prácticas.
 - `callouts.lua` — filtro de callouts de ejercicio/solución (ver más abajo).
+- `tikz.lua` — filtro de circuitos CircuiTikZ (ver más abajo).
 - `CONTENIDOS.md` — mapa docente: objetivos, contenidos y ejercicios de cada
   práctica, e inventario acumulado de comandos y conceptos.
 - `TODO.md` — pendientes del material.
 - `_site/` — salida generada (HTML + PDF). No se edita a mano.
 - `_freeze/`, `.jupyter_cache/`, `.quarto/` — cachés de ejecución y de proyecto
   (ver *Freeze y caché*). Se regeneran solas; se pueden borrar.
+- `_tikz/` — SVG generados a partir de los bloques `{.tikz}`. Caché: se
+  regenera solo.
 - `lab*.quarto_ipynb*` — notebooks intermedios que Quarto deja cuando un render
   se interrumpe. Son basura: se pueden borrar sin consecuencias.
 
@@ -137,6 +140,51 @@ El mismo efecto escrito a mano (sin el filtro) sería:
   nombres de macro son los de FA5 (p. ej. `\faPenNib`, no `\faPencilAlt`).
 - **HTML:** un emoji (`✏️` / `💡`).
 - `icon=false` oculta el icono por defecto del callout para no duplicarlo.
+
+## Circuitos con CircuiTikZ
+
+El filtro `tikz.lua` (registrado en `_quarto.yml`) permite dibujar circuitos con
+**CircuiTikZ** y que salgan bien en los **dos** formatos del sitio:
+
+````markdown
+```{.tikz width="55%"}
+\begin{circuitikz}[scale=1.1, transform shape]
+  \draw (0,0) to[V, l=$x(t)$] (0,2) -- (2,2)
+        to[R, l=$R$] (4,2) -- (4,0)
+        to[C, l=$C$, v^>=$y(t)$] (0,0);
+\end{circuitikz}
+```
+````
+
+Ojo a la sintaxis: es ```` ```{.tikz} ```` **con punto**. Sin el punto Quarto lo
+tomaría por una celda ejecutable y se la pasaría al kernel de MATLAB.
+
+Cómo funciona:
+
+- **En PDF** el código se inserta tal cual en el documento LaTeX y lo compila
+  lualatex. Es CircuiTikZ nativo: vectorial y con las fuentes del documento. El
+  `\usepackage{circuitikz}` lo inyecta el propio filtro.
+- **En HTML** cada bloque se compila por separado con `latex` + `dvisvgm` a un SVG,
+  que se guarda en `_tikz/<hash>.svg` y se inserta como imagen. El nombre es el
+  hash del código, así que **solo se recompila el circuito que cambia**; el resto
+  de renders no pagan el coste.
+
+Requisitos (una sola vez, y solo para la salida HTML):
+
+```bash
+tlmgr install circuitikz dvisvgm standalone luatex85
+```
+
+Limitaciones conocidas:
+
+- `width` solo afecta al HTML. En PDF el circuito sale al tamaño que fije el
+  propio código: usa `scale=` dentro de `\begin{circuitikz}[...]`.
+- dvisvgm avisa a veces de *"PostScript specials ignored"*. Es ruido: se ha
+  comprobado que el SVG resultante coincide con el PDF, colores incluidos. Viene
+  de que dvisvgm no encuentra Ghostscript, que aquí no hace falta porque se
+  convierte desde DVI y no desde PDF.
+- El SVG lleva los trazos en negro. Si algún día el sitio usa tema oscuro, habrá
+  que darles color explícito.
 
 ## Opciones de chunk en MATLAB: usa `%|`, no `#|`
 
