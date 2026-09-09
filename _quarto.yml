@@ -1,0 +1,47 @@
+project:
+  type: website
+  output-dir: _site
+
+website:
+  title: "Señales y Sistemas Lineales — Prácticas"
+  sidebar:
+    style: docked
+    search: true
+    contents:
+      - text: "Inicio"
+        href: index.qmd
+      - text: "Práctica 0 — Introducción a MATLAB"
+        href: lab0.qmd
+      - text: "Práctica 1 — Conversión AD y DA"
+        href: lab1.qmd
+
+# --- metadatos y ejecución compartidos por todos los labs ---
+lang: es
+subtitle: "Señales y Sistemas Lineales"
+jupyter: jupyter_matlab_kernel
+filters:
+  - callouts.lua
+
+execute:
+  echo: true
+  warning: false
+  cache: true
+  freeze: auto        # no re-ejecuta MATLAB de un lab sin cambios al construir el sitio
+
+format:
+  html:
+    toc: true
+    toc-title: "Contenido"
+    number-sections: true
+    code-copy: true
+    fig-align: center
+  pdf:
+    toc: true
+    toc-title: "Contenido"
+    number-sections: true
+    fig-width: 6
+    fig-height: 3.5
+    fig-align: center
+    include-in-header:
+      text: |
+        \usepackage{fontawesome5}

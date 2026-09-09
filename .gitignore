@@ -1,0 +1,18 @@
+# macOS
+.DS_Store
+
+# Quarto: salida generada y cachés de proyecto
+/_site/
+/.quarto/
+
+# Caché de ejecución de Jupyter (se regenera; 20 MB)
+/.jupyter_cache/
+
+# Notebooks intermedios que Quarto deja al interrumpir un render
+lab*.quarto_ipynb*
+
+# LaTeX
+*.aux
+*.log
+*.out
+*.toc

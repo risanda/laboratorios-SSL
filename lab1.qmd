@@ -1,0 +1,795 @@
+---
+title: "Práctica 1: Conversión A/D y D/A"
+---
+
+# Introducción
+
+En esta práctica recorremos con MATLAB la **cadena completa de digitalización de
+una señal**: partimos de una señal analógica, la **muestreamos**, la
+**cuantizamos** y finalmente la **reconstruimos** para volver al mundo continuo.
+Son los tres bloques que forman cualquier conversor A/D y D/A real.
+
+Damos por supuesto que ya has hecho la Práctica 0, así que manejas variables,
+vectores, operaciones elemento a elemento, funciones propias en archivos `.m` y
+los comandos básicos de representación gráfica. Aquí los aplicaremos a un problema
+concreto de la asignatura.
+
+Como en la práctica anterior, el documento está pensado para que lo sigas
+**escribiendo tú mismo el código** en un *script*: no basta con leerlo, tienes que
+reproducir cada ejercicio y experimentar cambiando valores.
+
+## Objetivos
+
+Al terminar deberías ser capaz de:
+
+- Distinguir entre una señal "continua" (un vector de tiempos muy denso) y una
+  señal **discreta** (las muestras tomadas cada $T_s = 1/f_s$ segundos), y
+  representar cada una con el comando adecuado: `plot`, `stem` o `stairs`.
+- Reconocer el fenómeno del **aliasing**, explicar por qué dos señales distintas
+  pueden dar las mismas muestras y aplicar el criterio de **Nyquist**
+  ($f_s > 2f_{\max}$) para evitarlo.
+- **Cuantizar** una señal con un número dado de bits, por **redondeo** y por
+  **truncamiento**, y medir la degradación que introduce mediante el*error máximo
+  y la relación señal-ruido de cuantización (**SQNR**).
+- **Reconstruir** una señal a partir de sus muestras, tanto con el retenedor de
+  orden cero (**ZOH**) como con la interpolación ideal (**sinc**), y comparar el
+  resultado con la señal original.
+
+## Estructura de la práctica
+
+El documento se divide en dos partes:
+
+- El **trabajo previo** debes prepararlo **antes** de acudir al laboratorio. Cada
+  ejercicio va acompañado de su solución, que puedes desplegar para comprobar tu
+  respuesta. Intenta resolverlos por tu cuenta antes de mirarla.
+- El **trabajo de laboratorio** es lo que realizarás durante la sesión, y reutiliza
+  las funciones que habrás escrito en el trabajo previo (`calcula_sqnr`,
+  `interp_ideal`, ...). Si llegas con esa parte hecha, la sesión te cundirá mucho más.
+
+
+
+:::{.callout-warning}
+## Recomendaciones
+Es altamente recomendable **trabajar en una carpeta dedicada** solo para esta práctica y  **crear un archivo `ejercicioX.m` individual** por cada ejercicio. Igualmente, recuerda que los scripts con funciones auxiliares deben estar en dicha carpeta para que MATLAB pueda encontrarlas. 
+:::
+
+# Trabajo previo
+
+
+## Señales "continuas"
+
+Cuando usamos el comando `plot` con un vector de tiempos muy denso **parece** que dibujamos una curva continua y suave. Pero MATLAB en
+realidad solo conoce los valores de la señal en los puntos del vector `t`, y
+**une esos puntos con segmentos rectos**. La "continuidad" es una ilusión que
+mejora cuanto más puntos usamos.
+
+Veámoslo dibujando la *misma* señal senoidal con un número creciente de puntos:
+
+:::{.ejercicio}
+Completa el siguiente código para dibujar una señal senoidal de 1 Hz y amplitud unitaria en el intervalo [0, 1] s con distintos números de puntos $N = \{5, 10, 50, 500\}$, utilizando un trazo del tipo `'-o'`. Observa cómo cambia la apariencia de la curva a medida que aumentamos `N`.
+```{matlab}
+
+clear all; close all; clc;
+Ns = ???;       % vector con los números de puntos
+
+for k = 1:4
+    N = Ns(k);
+    t = linspace(???,???,???);   % N puntos entre 0 y 1
+    x = ???;         % un periodo de una senoide unitaria de 1 Hz
+
+    subplot(2, 2, k)
+    plot(???, ???, ???)
+    title(sprintf('N = %d puntos', N))
+    xlabel('t (s)'); ylabel('x(t)')
+    grid on
+end
+```
+:::
+
+:::{.solucion}
+```{matlab}
+%| echo: false
+clear all; close all; clc;
+Ns = [5, 10, 50, 500];       % distintos números de puntos
+
+for k = 1:4
+    N = Ns(k);
+    t = linspace(0, 1, N);   % N puntos entre 0 y 1
+    x = sin(2*pi*t);         % un periodo de una senoide de 1 Hz
+
+    subplot(2, 2, k)
+    plot(t, x, '-o', 'MarkerSize', 2)
+    title(sprintf('N = %d puntos', N))
+    xlabel('t (s)'); ylabel('x(t)')
+    grid on
+end
+```
+Deberías obtener esta gráfica, aunque el tamaño de tus marcadores será mayor. Puedes reducirlo, por ejemplo, con `plot(t, x, '-o', 'MarkerSize', 2)`. Prácticamente todos los aspectos visuales son configurables por código.
+:::
+
+## Muestreo (señales discretas)
+
+Cuando hablamos de "muestrar" en MATLAB nos referimos simplemente a **quedarnos con algunos de los puntos** de la señal continua. Por ejemplo, si queremos muestrear una señal 5 Hz (o sea, cada 0.2 s), tomamos solo sus valores en los instantes $t = \{0, 0.2, 0.4, 0.6, 0.8, 1\}$ s.
+
+:::{.callout-note}
+## Vectores de tiempo: `linspace` vs. operador `:`?
+Para muestrear señales es más cómodo usar `t1:Ts:t2`, lo cual genera un vector de tiempos desde `t1` hasta `t2` con periodo de muestreo `Ts`. Para obtener el mismo resultado con `linspace` habría que calcular explícitamente el número de puntos, `N = (t2-t1)/Ts + 1`, lo cual es más engorroso. Sin embargo, si nos piden dibujar una señal "continua" con N puntos, entonces sí conviene usar `linspace(t1, t2, N)`.
+:::
+
+:::{.ejercicio}
+Dibuja una señal "continua" de amplitud unitaria y frecuencia 1 Hz con 1000 puntos en el intervalo [0, 1]. Dibuja, de forma superpuesta, la misma señal muestreada a 5 Hz. Usa `plot` para la señal continua con un trazo azul sólido, y `stem` en color rojo para las muestras. Incluye leyenda, cuadrícula y etiquetas en los ejes. Observa cómo las muestras representan la señal original.
+:::
+
+:::{.solucion}
+```{matlab}
+%| echo: false
+clear all; close all; clc;
+f  = 1;                      % frecuencia de la señal (Hz)
+fs = 5;                      % frecuencia de muestreo (Hz)
+Ts = 1/fs;                   % periodo de muestreo: 0.2 s
+
+tc = linspace(0, 1, 1000);   % tiempo "continuo": muchos puntos
+xc = sin(2*pi*f*tc);         % señal continua
+
+tn = 0:Ts:1;                 % instantes de muestreo: 0, 0.2, ..., 1
+xn = sin(2*pi*f*tn);         % muestras de la señal
+
+plot(tc, xc, 'b-', 'LineWidth', 1.5)          % señal continua
+hold on
+stem(tn, xn, 'r', 'filled', 'LineWidth', 1.2) % sus muestras
+hold off
+xlabel('t (s)'); ylabel('x(t)')
+title('Senoide de 1 Hz y sus muestras a f_s = 5 Hz')
+legend('x(t) continua', 'x[n] muestras')
+grid on
+```
+
+Fíjate en que **las dos señales se construyen con la misma fórmula**: lo único que
+cambia es el vector de tiempos. Para la continua usamos 1000 puntos muy juntos
+(`linspace`) y para las muestras solo los instantes separados $T_s = 1/f_s = 0.2$ s
+(operador dos puntos). Las muestras rojas caen exactamente **encima** de la curva
+azul, porque no son otra cosa que algunos de sus valores.
+:::
+
+## Aliasing
+
+Si muestreamos **demasiado despacio** dos señales continuas de frecuencias distintas pueden producir **exactamente las mismas muestras**. Al mirar solamente los puntos muestreados, se vuelven indistinguibles. Este fenómeno se llama
+**aliasing**.
+
+:::{.ejercicio}
+Crea una figura con dos subplots en horizontal (1×2). En cada uno dibuja, como en
+el ejemplo anterior, la senoide continua con `plot` y sus muestras a 5 Hz con
+`stem`:
+
+- Izquierda: la senoide de 1 Hz
+- Derecha: la senoide de 6 Hz
+
+Usa el mismo rango vertical en los dos paneles para poder compararlos. ¿Qué
+observas si te fijas solo en las muestras?
+:::
+
+:::{.solucion}
+```{matlab}
+%| echo: false
+clear all; close all; clc;
+f1 = 1;                      % primera frecuencia (Hz)
+f2 = 6;                      % segunda frecuencia (Hz)
+fs = 5;                      % frecuencia de muestreo (Hz)
+
+tc = linspace(0, 1, 1000);   % tiempo "continuo": muchos puntos
+tn = 0:1/fs:1;               % instantes de muestreo: cada 0.2 s
+
+% --- Izquierda: la senoide de 1 Hz y sus muestras ---
+subplot(1, 2, 1)
+plot(tc, sin(2*pi*f1*tc), 'b-', 'LineWidth', 1.5)
+hold on
+stem(tn, sin(2*pi*f1*tn), 'r', 'filled', 'LineWidth', 1.2)
+hold off
+title('f_1 = 1 Hz muestreada a f_s = 5 Hz')
+xlabel('t (s)');
+ylabel('x');
+ylim([-1 1]);
+grid on
+
+% --- Derecha: la senoide de 6 Hz y sus muestras ---
+subplot(1, 2, 2)
+plot(tc, sin(2*pi*f2*tc), 'g-', 'LineWidth', 1.5)
+hold on
+stem(tn, sin(2*pi*f2*tn), 'r', 'filled', 'LineWidth', 1.2)
+hold off
+title('f_2 = 6 Hz muestreada a f_s = 5 Hz')
+xlabel('t (s)');
+ylim([-1 1]);
+grid on
+```
+
+Las dos curvas continuas son **claramente distintas**: la de 6 Hz oscila seis
+veces más rápido. En cambio, **las muestras rojas son idénticas en los dos
+paneles**: los círculos caen exactamente en los mismos sitios. Si borrases las
+curvas y te quedases solo con los círculos, no habría manera de saber cuál de las
+dos senoides los produjo. Este es el problema del **aliasing**.
+:::
+
+
+Para que las muestras representen sin ambigüedad una señal, la frecuencia de
+muestreo debe ser **mayor que el doble de la frecuencia máxima de la señal**:
+$$ f_s > 2\,f_{\max} $$
+Este límite ($2 f_{\max}$) se conoce como  **frecuencia de Nyquist**. 
+
+En el ejemplo anterior
+$f_s = 5$ Hz es insuficiente para la senoide de 6 Hz (haría falta $f_s > 12$ Hz),
+y por eso aparece el aliasing. Fíjate que obtuvimos una frecuencia "fantasma" de 1 Hz, que es la que parece tener la señal de 6 Hz cuando la muestreamos a 5 Hz.
+
+:::{.callout-warning}
+## Aliasing
+El efecto de aliasing aparece cuando muestreamos una señal a una frecuencia **menor que** la frecuencia de Nyquist. Como resultado, el muestreo da lugar a una **frecuencia "fantasma" (alias)** que **no es real**. 
+:::
+
+:::{.callout-warning}
+## Filtro anti-aliasing
+El proceso de aliasing es **irreversible**: una vez que se han tomado las muestras, no hay manera de distinguir entre la señal original y su alias. Por eso, es crucial **filtrar una señal antes de muestrearla** para eliminar las componentes de frecuencia mayores que la mitad de la frecuencia de muestreo. Este filtro se llama **filtro anti-aliasing** y es un paso fundamental en cualquier sistema de conversión analógico-digital.
+:::
+
+## Cuantización
+
+
+Se ha visto en teoría que uno de los pasos en la digitalización de una señal es la **cuantización**, que consiste en aproximar cada valor de la señal a un **nivel discreto** dentro de un rango determinado.
+
+Podemos cuantizar de varias formas, siendo las más comunes:
+
+- **Redondeo**: cada valor se aproxima al nivel más cercano.
+
+```{matlab}
+function xq = cuant_redondeo(x, Amin, Amax, N)
+% CUANT_REDONDEO  Cuantización uniforme por redondeo al nivel más cercano.
+%   xq = CUANT_REDONDEO(x, Amin, Amax, N) cuantiza x en el rango [Amin, Amax]
+%   con N bits (2^N niveles), redondeando al nivel más cercano.
+    L     = 2^N;
+    Delta = (Amax - Amin) / L;
+    xq    = Amin + Delta * round((x - Amin)/Delta);
+    xq    = min(max(xq, Amin), Amax);
+end
+
+```
+
+- **Truncamiento**: cada valor se aproxima al nivel inferior más cercano.
+
+```{matlab}
+function xq = cuant_truncamiento(x, Amin, Amax, N)
+% CUANT_TRUNCAMIENTO  Cuantización uniforme por truncamiento (floor).
+%   xq = CUANT_TRUNCAMIENTO(x, Amin, Amax, N) cuantiza x en el rango
+%   [Amin, Amax] con N bits (2^N niveles), truncando hacia el nivel inferior.
+    L     = 2^N;
+    Delta = (Amax - Amin) / L;
+    xq    = Amin + Delta * floor((x - Amin)/Delta);
+    xq    = min(max(xq, Amin), Amax);
+end
+
+```
+
+
+
+En ambos casos, la señal cuantizada será diferente de la original y por tanto se introduce un **error de cuantización**. Este error puede medirse de varias formas, siendo una de las más comunes la **relación señal-ruido de cuantización (SQNR)**, que compara la potencia de la señal original ($x$), con la potencia del error de cuantización (e):
+$$ SQNR = 10 \log_{10} \left( \frac{\sum x[n]^2}{\sum e[n]^2} \right)\,  dB$$,
+
+
+:::{.ejercicio}
+Implementa una función `sqnr = calcula_sqnr(x, xq)` que calcule la relación señal-ruido de cuantización (SQNR) en dB entre la señal original `x` y su versión cuantizada `xq`. Guarda esta función en un archivo llamado `calcula_sqnr.m`. NOTA: el logaritmo en base 10 se calcula con `log10` en MATLAB.
+:::
+
+
+
+:::{.ejercicio}
+Genera una señal senoidal continua de 5 Hz y amplitud unitaria en el intervalo [0, 0.4] s con 2000 puntos. Cuantízala con 2 bits en el rango [-1, 1] usando **redondeo**. Dibuja en una misma figura la señal original y la señal cuantizada. Calcula el error máximo en valor absoluto y la SQNR, y muéstralos por pantalla. Utiliza las funciones `cuant_redondeo` (proporcionada más arriba) y `calcula_sqnr` (implementada por ti)
+:::
+
+:::{.solucion}
+
+```{matlab}
+%| echo: false
+clear all; close all; clc;
+
+% --- 1. Señal "continua" ---
+A = 1;                        % amplitud
+f = 5;                        % frecuencia (Hz)
+t = linspace(0, 0.4, 2000);   % 2000 puntos entre 0 y 0.4 s
+x = A*sin(2*pi*f*t);          % señal original
+
+% --- 2. Cuantización por redondeo ---
+Amin = -1;                    % extremo inferior del rango
+Amax =  1;                    % extremo superior del rango
+N    =  2;                    % nº de bits
+xq   = cuant_redondeo(x, Amin, Amax, N);
+
+% --- 3. Gráfica ---
+plot(t, x,  'b-', 'LineWidth', 1.5)     % señal original
+hold on
+plot(t, xq, 'r-', 'LineWidth', 1.5)     % señal cuantizada
+hold off
+xlabel('t (s)');
+ylabel('amplitud');
+title('Senoide de 5 Hz cuantizada con N = 2 bits')
+legend('x(t) original', 'x_q(t) cuantizada', 'Location', 'best')
+grid on
+
+% --- 4. Métricas ---
+e    = xq - x;                % error de cuantización
+emax = max(abs(e));           % error máximo en valor absoluto
+sqnr = calcula_sqnr(x, xq);   % relación señal-ruido de cuantización
+
+fprintf('Error máximo: %.4f\n', emax);
+fprintf('SQNR: %.2f dB\n', sqnr);
+
+function sqnr = calcula_sqnr(x, xq)
+% SQNR en dB entre la señal original x y su versión cuantizada xq.
+    e    = xq - x;
+    sqnr = 10*log10(sum(x.^2) / sum(e.^2));
+end
+
+function xq = cuant_redondeo(x, Amin, Amax, N)
+% CUANT_REDONDEO  Cuantización uniforme por redondeo al nivel más cercano.
+%   xq = CUANT_REDONDEO(x, Amin, Amax, N) cuantiza x en el rango [Amin, Amax]
+%   con N bits (2^N niveles), redondeando al nivel más cercano.
+    L     = 2^N;
+    Delta = (Amax - Amin) / L;
+    xq    = Amin + Delta * round((x - Amin)/Delta);
+    xq    = min(max(xq, Amin), Amax);
+end
+```
+
+Con `N = 2` bits el cuantizador dispone de $2^N = 4$ niveles para cubrir el rango
+$[-1, 1]$, es decir, un paso de cuantización
+$$\Delta = \frac{A_{max} - A_{min}}{2^N} = \frac{2}{4} = 0{,}5$$
+
+Por eso la señal cuantizada tiene ese aspecto de escalera: solo puede
+tomar unos pocos valores. Como redondeamos al nivel más cercano, ningún valor
+puede quedar a más de medio escalón del original, así que el error máximo es
+$\Delta/2 = 0{,}25$.
+
+La SQNR resultante ronda los 14 dB, un valor muy pobre. La teoría dice que para
+una senoide que ocupa todo el rango del cuantizador
+$$\text{SQNR} \approx 6{,}02\,N + 1{,}76 \ \text{dB}$$
+o sea, **unos 6 dB de mejora por cada bit** que añadimos. Compruébalo cambiando
+`N` a 3 y a 4: verás que el error máximo se reduce a la mitad cada vez y que la
+SQNR sube unos 6 dB.
+
+:::
+
+## Reconstrucción D/A
+
+Generalmente muestreamos una señal para **almacenarla o procesarla digitalmente**, y luego la reconstruimos para escucharla o visualizarla. Una señal discreta solamente existe en los instantes de muestreo, y para poder generar una señal continua necesitamos **interpolar** entre las muestras.
+
+Existe un interpolador trivial, conocido como **retenedor de orden cero**, comunmente ZOH (por sus iniciales inglés, *zero-order-hold*), que consiste en mantener cada muestra constante a lo largo del tiempo hasta la siguiente muestra.
+
+:::{.ejercicio}
+A continuación se proporciona una función `interp_zoh` que implementa la interpolación ZOH. Copia el código en un archivo llamado `interp_zoh.m` y guárdalo en tu directorio de trabajo. 
+
+- Genera una senoidal "continua" de 1 Hz en el intervalo [0, 1] s con un vector de tiempos de 1000 puntos. Guarda la señal en `xc` y el vector de tiempos en `tc`.
+- Muestrea la misma señal a 10 Hz. Guarda la señal discreta en `xn` y los instantes de muestreo en `tn`.
+- Utiliza la función `interp_zoh` para reconstruir la señal discreta sobre el vector de tiempos `tc`. Guarda el resultado en `xc_zoh`.
+- Dibuja la señal continua, la muestreada, y la reconstruida con ZOH en una misma gráfica. Mira la solución para más detalles.
+
+```{matlab}
+function xc_zoh = interp_zoh(xn, tn, tc)
+% INTERP_ZOH  Interpolación por retención de orden cero (zero-order hold).
+%   Mantiene cada muestra constante hasta que llega la siguiente.
+%
+%   xn : valores de la señal discreta
+%   tn : instantes de tiempo de cada muestra (mismo tamaño que xn)
+%   tc : instantes de tiempo "continuos" donde queremos la señal
+%   xc : señal ZOH evaluada en tc
+
+    % Reservamos el vector del resultado (mismo tamaño que tc)
+    xc_zoh = zeros(1, length(tc));
+
+    % Recorremos uno a uno todos los instantes "continuos"
+    for k = 1:length(tc)
+
+        % De momento nos quedamos con el primer valor de la señal
+        valor = xn(1);
+
+        % Miramos todas las muestras y nos quedamos con la última
+        % cuyo instante tn(i) sea menor o igual que el tiempo actual tc(k)
+        for i = 1:length(tn)
+            if tn(i) <= tc(k)
+                valor = xn(i);   % esta muestra es válida, la guardamos
+            end
+        end
+
+        % Guardamos el valor retenido en la posición k del resultado
+        xc_zoh(k) = valor;
+    end
+end
+```
+
+:::
+
+:::{.solucion}
+```{matlab}
+%| echo: false
+clear all; close all; clc;
+f  = 1;                       % frecuencia de la señal (Hz)
+fs = 10;                      % frecuencia de muestreo (Hz)
+
+% --- Señal "continua" ---
+tc = linspace(0, 1, 1000);    % tiempo "continuo": 1000 puntos
+xc = sin(2*pi*f*tc);          % señal continua
+
+% --- Señal muestreada a fs = 10 Hz ---
+tn = 0:1/fs:1;                % instantes de muestreo: cada 0.1 s
+xn = sin(2*pi*f*tn);          % muestras de la señal
+
+% --- Reconstrucción por retenedor de orden cero ---
+xc_zoh = interp_zoh(xn, tn, tc);   % ZOH evaluado sobre el mismo vector tc
+
+plot(tc, xc, 'b-', 'LineWidth', 1.5)           % señal continua original
+hold on
+plot(tc, xc_zoh, 'g-', 'LineWidth', 1.5)       % reconstrucción ZOH
+stem(tn, xn, 'r', 'filled', 'LineWidth', 1.2)  % muestras
+hold off
+xlabel('t (s)');
+ylabel('x');
+title('Reconstrucción ZOH de una senoide de 1 Hz muestreada a f_s = 10 Hz')
+legend('x(t) original', 'x(t) reconstruida (ZOH)', 'x[n] muestras', ...
+       'Location', 'best')
+grid on
+
+function xc_zoh = interp_zoh(xn, tn, tc)
+% INTERP_ZOH  Interpolación por retención de orden cero (zero-order hold).
+%   Mantiene cada muestra constante hasta que llega la siguiente.
+%
+%   xn : valores de la señal discreta
+%   tn : instantes de tiempo de cada muestra (mismo tamaño que xn)
+%   tc : instantes de tiempo "continuos" donde queremos la señal
+%   xc : señal ZOH evaluada en tc
+
+    % Reservamos el vector del resultado (mismo tamaño que tc)
+    xc_zoh = zeros(1, length(tc));
+
+    % Recorremos uno a uno todos los instantes "continuos"
+    for k = 1:length(tc)
+
+        % De momento nos quedamos con el primer valor de la señal
+        valor = xn(1);
+
+        % Miramos todas las muestras y nos quedamos con la última
+        % cuyo instante tn(i) sea menor o igual que el tiempo actual tc(k)
+        for i = 1:length(tn)
+            if tn(i) <= tc(k)
+                valor = xn(i);   % esta muestra es válida, la guardamos
+            end
+        end
+
+        % Guardamos el valor retenido en la posición k del resultado
+        xc_zoh(k) = valor;
+    end
+end
+```
+
+Los tres trazos comparten el mismo eje de tiempos, pero cada uno cuenta una cosa
+distinta: la curva azul es la señal de partida, los círculos rojos son lo único
+que "conoce" el sistema digital, y la línea negra es lo que un conversor D/A
+entregaría a partir de esos círculos. La reconstrucción es una **escalera**: cada
+muestra se mantiene constante durante $T_s = 1/f_s = 0.1$ s hasta que llega la
+siguiente.
+:::
+
+::: {.callout-note}
+## `stairs` hace lo mismo en una línea
+
+La escalera que acabas de obtener es exactamente la que dibuja
+`stairs(tn, xn)`. La diferencia es que `interp_zoh` te devuelve **la señal
+reconstruida evaluada en el vector `tc`**, es decir, los valores con los que
+podrías seguir calculando (su error frente a la original, su potencia...),
+mientras que `stairs` se limita a dibujarla.
+:::
+
+Existen otros métodos de reconstrucción más sofisticados, como la **interpolación lineal**, en la que, en lugar de mantener cada muestra constante, se dibuja un segmento recto entre cada par de muestras consecutivas. Esto produce una señal reconstruida más suave y cercana a la original, aunque todavía no es perfecta.
+
+La teoría de la reconstrucción de señales muestreadas se basa en el **Teorema de Muestreo de Nyquist-Shannon**, que establece que una señal puede ser perfectamente reconstruida a partir de sus muestras si la frecuencia de muestreo es mayor que el doble de la frecuencia máxima presente en la señal.
+
+:::{.callout-note}
+## Teorema de Muestreo de Nyquist-Shannon
+Si una señal no contiene frecuencias mayores que $f_{\max}$, entonces puede ser perfectamente reconstruida a partir de sus muestras si la frecuencia de muestreo $f_s$ cumple
+$$ f_s > 2 f_{\max} $$
+mediante la siguiente formula de interpolación:
+$$ x(t) = \sum_{n=-\infty}^{\infty} x[n] \cdot \text{sinc}\left(\frac{t - nT_s}{T_s}\right) $$
+donde $\text{sinc}(x) = \frac{\sin(\pi x)}{\pi x}$ y $T_s = 1/f_s$ es el periodo de muestreo.
+
+:::
+
+
+
+# Trabajo de laboratorio
+
+## Muestreo
+
+## Cuantización
+
+
+
+::: {.ejercicio}
+
+Genera una señal senoidal de 5 Hz y amplitud unitaria en el intervalo [0, 0.4] s con 2000 puntos. Cuantízala con 2 bits en el rango [-1, 1] usando **redondeo** y **truncamiento**, y dibuja en una figura de 2×2:
+
+1. Arriba izquierda: señal original y cuantizada por redondeo.
+2. Arriba derecha: señal original y cuantizada por truncamiento.
+3. Abajo izquierda: error de cuantización por redondeo.
+4. Abajo derecha: error de cuantización por truncamiento. 
+
+Además, muestra por pantalla el error máximo en valor absoluto de cada método y la relación señal-ruido de cuantización (SQNR) en dB calculada mediante la función proporcionada.
+
+Ejecuta tu script para valores de $N = \{2,3,4\}$ y, para cada método de cuantización, anota:
+
+- Número de bits
+- Niveles
+- Resolución
+- Error máximo
+- SQNR
+
+:::
+
+:::{.solucion}
+
+Se muestra como ejemplo las gráficas correspondientes al caso de $N=2$ bits. Las tablas de resultados no hace falta que las generes en MATLAB, pero sí que las rellenes a mano para los valores de $N$ indicados.
+
+```{matlab}
+%|echo: false
+%% Cuantización por REDONDEO vs. TRUNCAMIENTO sobre una señal senoidal
+%  - Señal de 5 Hz, amplitud unitaria, [0, 0.4] s con 2000 puntos
+%  - Cuantización en el rango [-1, 1] con redondeo y truncamiento
+%  - Figura 2x2 (señales y errores) para N = 2 bits
+%  - Error máximo y SQNR por pantalla, y tablas para varios N
+
+clear; close all; clc;
+
+%% 1. Señal
+f = 5;                        % frecuencia (Hz)
+t = linspace(0, 0.4, 2000);   % 2000 puntos en [0, 0.4] s
+x = sin(2*pi*f*t);            % senoidal de amplitud unitaria
+
+%% 2. Parámetros del cuantizador (rango y resolución)
+Amin = -1;                    % extremo inferior del rango
+Amax =  1;                    % extremo superior del rango
+N    =  2;                    % nº de bits para la figura
+
+L     = 2^N;                       % nº de niveles
+Delta = (Amax - Amin) / L;         % paso de cuantización
+
+%% 3. Cuantización (usando las funciones locales)
+xr = cuant_redondeo(x, Amin, Amax, N);        % redondeo
+xt = cuant_truncamiento(x, Amin, Amax, N);    % truncamiento
+
+er = xr - x;    % error redondeo
+et = xt - x;    % error truncamiento
+
+emax_r = max(abs(er));
+emax_t = max(abs(et));
+
+%% 4. Figura 2x2
+lv  = Amin:Delta:Amax;                 % niveles de cuantización
+xl  = t([1 end]);                      % extremos del eje t
+mrg = 0.1*(Amax - Amin);               % margen para el eje y
+yl  = [Amin-mrg, Amax+mrg];
+
+figure('Color','w','Position',[100 100 950 620]);
+
+% ---- (1,1) arriba izquierda: original + redondeo ----
+subplot(2,2,1);
+plot(xl, [lv; lv], ':', 'Color',[.85 .85 .85], 'HandleVisibility','off'); hold on;
+plot(t, x,  'k-', 'LineWidth', 1);
+stairs(t, xr, 'b', 'LineWidth', 1);
+hold off; grid on;
+title(sprintf('Redondeo  (N = %d bits, %d niveles)', N, L));
+xlabel('t (s)'); ylabel('amplitud'); ylim(yl);
+legend('original','cuantizada','Location','southoutside','Orientation','horizontal');
+
+% ---- (1,2) arriba derecha: original + truncamiento ----
+subplot(2,2,2);
+plot(xl, [lv; lv], ':', 'Color',[.85 .85 .85], 'HandleVisibility','off'); hold on;
+plot(t, x,  'k-', 'LineWidth', 1);
+stairs(t, xt, 'r', 'LineWidth', 1);
+hold off; grid on;
+title(sprintf('Truncamiento  (N = %d bits, %d niveles)', N, L));
+xlabel('t (s)'); ylabel('amplitud'); ylim(yl);
+legend('original','cuantizada','Location','southoutside','Orientation','horizontal');
+
+% ---- (2,1) abajo izquierda: error redondeo ----
+subplot(2,2,3);
+plot(t, er, 'b'); hold on;
+plot(xl, [ Delta/2  Delta/2], 'k:');      % cota superior teórica
+plot(xl, [-Delta/2 -Delta/2], 'k:');      % cota inferior teórica
+hold off; grid on;
+title('Error de cuantización — redondeo');
+xlabel('t (s)'); ylabel('e = x_q - x'); ylim([-Delta Delta]);
+
+% ---- (2,2) abajo derecha: error truncamiento ----
+subplot(2,2,4);
+plot(t, et, 'r'); hold on;
+plot(xl, [0 0], 'k:');                     % cota superior teórica
+plot(xl, [-Delta -Delta], 'k:');           % cota inferior teórica
+hold off; grid on;
+title('Error de cuantización — truncamiento');
+xlabel('t (s)'); ylabel('e = x_q - x'); ylim([-Delta Delta]);
+
+
+%% 6. Tablas para diferentes valores de N
+Nvec = [2 3 4];
+
+fprintf('--- Resultados en función de N (no hace falta que generes esta tabla en MATLAB) ---\n', N);
+fprintf('======================= REDONDEO =======================\n');
+fprintf(' Bits | Niveles | Resolución | Error máx | SQNR (dB)\n');
+fprintf('------+---------+------------+-----------+----------\n');
+for Ni = Nvec
+    Li = 2^Ni;
+    Di = (Amax - Amin) / Li;
+    xq = cuant_redondeo(x, Amin, Amax, Ni);
+    em = max(abs(xq - x));
+    sq = calcula_sqnr(x, xq);
+    fprintf('  %2d  |  %5d  |  %8.4f  |  %7.4f  |  %6.2f\n', Ni, Li, Di, em, sq);
+end
+
+fprintf('\n===================== TRUNCAMIENTO =====================\n');
+fprintf(' Bits | Niveles | Resolución | Error máx | SQNR (dB)\n');
+fprintf('------+---------+------------+-----------+----------\n');
+for Ni = Nvec
+    Li = 2^Ni;
+    Di = (Amax - Amin) / Li;
+    xq = cuant_truncamiento(x, Amin, Amax, Ni);
+    em = max(abs(xq - x));
+    sq = calcula_sqnr(x, xq);
+    fprintf('  %2d  |  %5d  |  %8.4f  |  %7.4f  |  %6.2f\n', Ni, Li, Di, em, sq);
+end
+
+
+%% ====================== FUNCIONES LOCALES ======================
+
+function xq = cuant_redondeo(x, Amin, Amax, N)
+% CUANT_REDONDEO  Cuantización uniforme por redondeo al nivel más cercano.
+%   xq = CUANT_REDONDEO(x, Amin, Amax, N) cuantiza x en el rango [Amin, Amax]
+%   con N bits (2^N niveles), redondeando al nivel más cercano.
+    L     = 2^N;
+    Delta = (Amax - Amin) / L;
+    xq    = Amin + Delta * round((x - Amin)/Delta);
+    xq    = min(max(xq, Amin), Amax);
+end
+
+function xq = cuant_truncamiento(x, Amin, Amax, N)
+% CUANT_TRUNCAMIENTO  Cuantización uniforme por truncamiento (floor).
+%   xq = CUANT_TRUNCAMIENTO(x, Amin, Amax, N) cuantiza x en el rango
+%   [Amin, Amax] con N bits (2^N niveles), truncando hacia el nivel inferior.
+    L     = 2^N;
+    Delta = (Amax - Amin) / L;
+    xq    = Amin + Delta * floor((x - Amin)/Delta);
+    xq    = min(max(xq, Amin), Amax);
+end
+
+function sqnr = calcula_sqnr(x, xq)
+% CALCULA_SQNR  Relación señal-ruido de cuantización (SQNR) en dB.
+    e    = xq - x;
+    sqnr = 10*log10(sum(x.^2) / sum(e.^2));
+end
+```
+
+:::
+
+::: {.ejercicio}
+
+Aplica el cuantizador con redondeo a la señal de audio `y` obtenida mediante `[y,Fs] = audioread('p44100.wav')`. Determina un rango adecuado para la cuantización. Prueba diferentes valores de `N` y escucha el resultado con `sound(yq, Fs)`, siendo `yq` la versión cuantizada de la señal. Comenta cómo afecta la resolución a la calidad del sonido y relaciona tus observaciones con el SQNR.
+
+:::
+
+
+
+
+## Reconstrucción
+
+:::{.ejercicio}
+Implementa una función `xc_ideal = interp_ideal(xn, tn, tc)` que realice la reconstrucción ideal de una señal discreta mediante interpolación `sinc`. Completa el código proporcionado a continuación.
+
+```{matlab}
+function xc_ideal = interp_ideal(xn, tn, tc)
+% INTERP_IDEAL  Interpolación ideal mediante sinc.
+%   xn : valores de la señal discreta
+%   tn : instantes de tiempo de cada muestra (mismo tamaño que xn)
+%   tc : instantes de tiempo "continuos" donde queremos la señal
+    Ts = ???;  % periodo de muestreo (puedes calcularlo a partir de tn)
+    xc_ideal = zeros(1, length(tc));  % inicializamos el vector de salida a ceros
+    for k = 1:length(tc)
+        % sumamos la contribución de cada muestra
+        xc_ideal(k) = ???;
+    end
+end
+```
+
+:::
+
+:::{.solucion}
+Solo tienes que escribir la fórmula de interpolación ideal, que consiste en un sumatorio de las muestras multiplicadas por la función `sinc` evaluada en el tiempo correspondiente. Puedes calcular el periodo de muestreo `Ts` como la diferencia entre dos instantes consecutivos de `tn`. El término $n T_s$ podrías calcularlo tal cual pero fíjate que ya tienes los instantes de muestreo en el vector `tn`.
+
+```{matlab}
+%| echo: false
+function xc_ideal = interp_ideal(xn, tn, tc)
+% INTERP_IDEAL  Interpolación ideal mediante sinc.
+%   xn : valores de la señal discreta
+%   tn : instantes de tiempo de cada muestra (mismo tamaño que xn)
+%   tc : instantes de tiempo "continuos" donde queremos la señal
+    Ts = tn(2) - tn(1);  % periodo de muestreo
+    xc_ideal = zeros(1, length(tc));  % inicializamos el vector de salida
+    for k = 1:length(tc)
+        % sumamos la contribución de cada muestra
+        xc_ideal(k) = sum(xn .* sinc((tc(k) - tn)/Ts));
+    end
+end
+```
+:::
+
+:::{.ejercicio}
+Repite ahora, con tu función `interp_ideal`, el mismo experimento que hiciste en
+el trabajo previo con `interp_zoh`:
+
+- Genera una senoidal "continua" de 1 Hz en el intervalo [0, 1] s con un vector de
+  tiempos de 1000 puntos. Guarda la señal en `xc` y el vector de tiempos en `tc`.
+- Muestrea la misma señal a 10 Hz. Guarda la señal discreta en `xn` y los
+  instantes de muestreo en `tn`.
+- Utiliza la función `interp_ideal` para reconstruir la señal discreta sobre el vector de tiempos `tc`. Guarda el resultado en `xc_ideal`.
+- Dibuja la señal continua, la muestreada y la reconstruida en una misma gráfica,
+  usando los mismos colores que en el ejercicio del ZOH: azul para la original,
+  verde para la reconstruida y rojo para las muestras.
+
+NOTA: basta con copiar tu solución del Ejercicio 6 y cambiar un par de cosas.
+:::
+
+:::{.solucion}
+```{matlab}
+%| echo: false
+clear all; close all; clc;
+f  = 1;                       % frecuencia de la señal (Hz)
+fs = 10;                      % frecuencia de muestreo (Hz)
+
+% --- Señal "continua" ---
+tc = linspace(0, 1, 1000);    % tiempo "continuo": 1000 puntos
+xc = sin(2*pi*f*tc);          % señal continua
+
+% --- Señal muestreada a fs = 10 Hz ---
+tn = 0:1/fs:1;                % instantes de muestreo: cada 0.1 s
+xn = sin(2*pi*f*tn);          % muestras de la señal
+
+% --- Reconstrucción ideal (interpolación sinc) ---
+xc_ideal = interp_ideal(xn, tn, tc);
+
+plot(tc, xc, 'b-', 'LineWidth', 1.5)           % señal continua original
+hold on
+plot(tc, xc_ideal, 'g-', 'LineWidth', 1.5)     % reconstrucción ideal
+stem(tn, xn, 'r', 'filled', 'LineWidth', 1.2)  % muestras
+hold off
+xlabel('t (s)');
+ylabel('x');
+title('Reconstrucción ideal (sinc) de una senoide de 1 Hz muestreada a f_s = 10 Hz')
+legend('x(t) original', 'x(t) reconstruida (sinc)', 'x[n] muestras', ...
+       'Location', 'best')
+grid on
+
+
+function xc_ideal = interp_ideal(xn, tn, tc)
+% INTERP_IDEAL  Interpolación ideal mediante sinc.
+%   xn : valores de la señal discreta
+%   tn : instantes de tiempo de cada muestra (mismo tamaño que xn)
+%   tc : instantes de tiempo "continuos" donde queremos la señal
+    Ts = tn(2) - tn(1);  % periodo de muestreo
+    xc_ideal = zeros(1, length(tc));  % inicializamos el vector de salida
+    for k = 1:length(tc)
+        % sumamos la contribución de cada muestra
+        xc_ideal(k) = sum(xn .* sinc((tc(k) - tn)/Ts));
+    end
+end
+```
+:::
+
+:::{.ejercicio}
+En tu código anterior, aumenta progresivamente la frecuencia de la senoidal, en incrementos de 1 Hz, y observa cómo cambia la reconstrucción ideal.
+
+- ¿Qué ocurre cuando la frecuencia de la señal se acerca a la mitad de la frecuencia de muestreo?
+- ¿Qué ocurre cuando la frecuencia de la señal supera la mitad de la frecuencia de muestreo?
+:::
+

@@ -1,0 +1,28 @@
+---
+title: "Prácticas de laboratorio"
+number-sections: false
+---
+
+Material de laboratorio de la asignatura **Señales y Sistemas Lineales**. Cada
+práctica es una guía *follow-along*: no basta con leerla, hay que reproducir el
+código en MATLAB y experimentar.
+
+Usa el **menú de la izquierda** para navegar entre las prácticas.
+
+## Prácticas disponibles
+
+- [**Práctica 0 — Introducción a MATLAB**](lab0.qmd): primer contacto con MATLAB;
+  variables, vectores, operaciones elemento a elemento, sumatorios, convolución,
+  representación gráfica (`plot`, `stem`, `stairs`, `subplot`) y creación de
+  funciones. Incluye ejercicios resueltos.
+
+- [**Práctica 1 — Conversión AD y DA**](lab1.qmd): muestreo, cuantización y
+  reconstrucción de señales.
+
+## Cómo trabajar
+
+- Trabaja siempre en **scripts** (`.m`), nunca en *Live Scripts*.
+- Empieza cada figura con `clear all; close all; clc;` para partir de un entorno
+  limpio.
+- Cada práctica se puede descargar también en **PDF** (enlace en la barra
+  superior de su página).
