@@ -1,0 +1,211 @@
+---
+title: "Estabilidad BIBO"
+subtitle: "Enunciados y soluciones (ordenados de menor a mayor dificultad)"
+lang: es
+format:
+  html:
+    toc: true
+    html-math-method: mathjax
+  pdf:
+    toc: true
+---
+
+## Criterios de referencia
+
+- **Estabilidad BIBO:** toda entrada acotada ($|x| \leq B_x$) produce una salida acotada ($|y| \leq B_y$).
+- **Sistemas LTI:** son estables BIBO si y solo si su respuesta al impulso es absolutamente integrable (o sumable):
+
+$$
+\int_{-\infty}^{\infty} |h(t)|\,dt < \infty
+\qquad\qquad
+\sum_{n=-\infty}^{\infty} |h(n)| < \infty
+$$
+
+- **Sistemas no lineales:** la respuesta al impulso no caracteriza al sistema, así que el criterio anterior no es aplicable y hay que usar directamente la definición.
+- **Series e integrales útiles:**
+
+$$
+\sum_{n=0}^{\infty} a^n = \frac{1}{1-a} \ \ (|a| < 1)
+\qquad\qquad
+\int_0^{\infty} e^{-at}\,dt = \frac{1}{a} \ \ (a > 0)
+$$
+
+---
+
+## Problema 1
+
+Determina la estabilidad de los sistemas LTI definidos por las siguientes respuestas impulsionales: a) $h(t) = e^{-t}u(t)$; b) $h(n) = \{\underset{\uparrow}{1}, -1, 1, 1, 0, \ldots\}$ (la flecha indica $n = 0$).
+
+### Solución
+
+**a)**
+
+$$
+\int_{-\infty}^{\infty} |h(t)|\,dt = \int_0^{\infty} e^{-t}\,dt = 1 < \infty
+$$
+
+**Estable.**
+
+**b)** $h(n)$ tiene un número finito de muestras no nulas (sistema FIR):
+
+$$
+\sum_{n} |h(n)| = |1| + |-1| + |1| + |1| = 4 < \infty
+$$
+
+**Estable.** Todo sistema FIR con coeficientes finitos es estable.
+
+---
+
+## Problema 2
+
+Determina la estabilidad de los sistemas LTI definidos por las siguientes respuestas impulsionales: a) $h(t) = e^{3t}u(t)$; b) $h(n) = \left(\dfrac{1}{2}\right)^{|n|}$.
+
+### Solución
+
+**a)** La exponencial crece:
+
+$$
+\int_0^{\infty} e^{3t}\,dt = \lim_{T\to\infty} \frac{e^{3T} - 1}{3} = \infty
+$$
+
+**Inestable.**
+
+**b)** Separando $n = 0$ y usando la simetría de $|n|$:
+
+$$
+\sum_{n=-\infty}^{\infty} \left(\frac{1}{2}\right)^{|n|}
+= 1 + 2\sum_{n=1}^{\infty} \left(\frac{1}{2}\right)^{n}
+= 1 + 2\cdot\frac{1/2}{1 - 1/2} = 1 + 2 = 3 < \infty
+$$
+
+**Estable.**
+
+---
+
+## Problema 3
+
+Determina la estabilidad del sistema LTI continuo cuya respuesta impulsional es $h(t) = 2^{-|t|}$.
+
+### Solución
+
+Escribiendo $2^{-|t|} = e^{-|t|\ln 2}$ y usando que es par:
+
+$$
+\int_{-\infty}^{\infty} 2^{-|t|}\,dt = 2\int_0^{\infty} e^{-t\ln 2}\,dt = \frac{2}{\ln 2} \approx 2.885 < \infty
+$$
+
+**Estable.** (El sistema no es causal, porque $h(t) \neq 0$ para $t < 0$, pero eso no afecta a la estabilidad.)
+
+---
+
+## Problema 4
+
+Determina la estabilidad BIBO de los sistemas LTI causales definidos por las siguientes respuestas impulsionales: a) $h(t) = 10\cdot e^{-|t|}$; b) $h(n) = \left\{\left[\dfrac{1}{2}\right]^n + \left[\dfrac{1}{4}\right]^n\right\}u(n)$.
+
+### Solución
+
+**a)**
+
+$$
+\int_{-\infty}^{\infty} 10\,e^{-|t|}\,dt = 2\cdot 10\int_0^{\infty} e^{-t}\,dt = 20 < \infty
+$$
+
+**Estable.**
+
+> Nota: el enunciado dice que los sistemas son causales, pero $h(t) = 10\,e^{-|t|}$ no lo es, porque $h(t) \neq 0$ para $t < 0$. Si la intención era $h(t) = 10\,e^{-t}u(t)$, la integral vale $10$ y el sistema también es estable.
+
+**b)** Ambos términos son positivos, así que $|h(n)| = h(n)$:
+
+$$
+\sum_{n=0}^{\infty} \left[\left(\frac{1}{2}\right)^n + \left(\frac{1}{4}\right)^n\right]
+= \frac{1}{1 - 1/2} + \frac{1}{1 - 1/4} = 2 + \frac{4}{3} = \frac{10}{3} < \infty
+$$
+
+**Estable.**
+
+---
+
+## Problema 5
+
+Determina la estabilidad BIBO de los sistemas LTI definidos por las respuestas impulsionales: a) $h(n) = \left(\dfrac{1}{2}\right)^n u(-n)$; b) $h(t) = 10\cdot\big[e^{-2t} + e^{-10t}\big]u(t)$.
+
+### Solución
+
+**a)** Por el factor $u(-n)$, $h(n)$ solo es no nula para $n \leq 0$, y ahí $(1/2)^n = 2^{-n} = 2^{|n|}$, que **crece** al alejarse del origen. Con el cambio $m = -n$:
+
+$$
+\sum_{n=-\infty}^{0} \left(\frac{1}{2}\right)^n = \sum_{m=0}^{\infty} 2^m = \infty
+$$
+
+**Inestable.** La base $1/2$ induce a pensar en una serie convergente, pero al estar definida para $n$ negativos la secuencia es $\ldots, 8, 4, 2, 1$.
+
+**b)**
+
+$$
+\int_0^{\infty} 10\big[e^{-2t} + e^{-10t}\big]\,dt = 10\left(\frac{1}{2} + \frac{1}{10}\right) = 6 < \infty
+$$
+
+**Estable.**
+
+---
+
+## Problema 6
+
+Determina la respuesta impulsional de los siguientes sistemas discretos (son causales). ¿Son estables BIBO?
+
+a) $y(n) = -0.7\,y(n-1) + x(n)$
+
+b) $y(n) = \log\big[x(n) + 1\big] + 0.5\,y(n-1)$
+
+c) $y(n) = x^2(n)$
+
+### Solución
+
+En todos los casos se toma $x(n) = \delta(n)$ y condiciones iniciales nulas (reposo inicial: $y(n) = 0$ para $n < 0$).
+
+**a)** Sistema LTI. Iterando $h(n) = -0.7\,h(n-1) + \delta(n)$:
+
+$$
+h(0) = 1,\quad h(1) = -0.7,\quad h(2) = 0.49,\quad h(3) = -0.343,\ \ldots
+\;\Rightarrow\;
+h(n) = (-0.7)^n\,u(n)
+$$
+
+Estabilidad:
+
+$$
+\sum_{n=0}^{\infty} |h(n)| = \sum_{n=0}^{\infty} 0.7^n = \frac{1}{1 - 0.7} = \frac{10}{3} < \infty
+$$
+
+**Estable.** (En general, $y(n) = a\,y(n-1) + x(n)$ es estable si y solo si $|a| < 1$.)
+
+**b)** Para $n \geq 1$ la entrada es nula y $\log(0 + 1) = 0$, así que:
+
+$$
+h(0) = \log 2,\qquad h(n) = 0.5\,h(n-1) \ \ (n \geq 1)
+\;\Rightarrow\;
+h(n) = \log(2)\,(0.5)^n\,u(n)
+$$
+
+Aunque esta $h(n)$ es sumable, **el sistema no es lineal** (por el logaritmo), así que $h(n)$ no lo caracteriza y el criterio $\sum|h(n)| < \infty$ no sirve. Aplicando la definición:
+
+- Con la entrada acotada $x(n) = -1$, se obtiene $\log(0) = -\infty$: la salida no está acotada.
+- Para $x(n) < -1$, el logaritmo ni siquiera está definido en los reales.
+
+**No es estable BIBO** para entradas acotadas arbitrarias.
+
+> Si la entrada se restringe a $x(n) + 1 \geq \varepsilon > 0$ (y acotada), entonces $|\log[x(n)+1]| \leq M$ y la parte recursiva con coeficiente $0.5$ mantiene la salida acotada: $|y(n)| \leq \dfrac{M}{1 - 0.5} = 2M$. Con esa restricción, el sistema sí sería estable.
+
+**c)** Respuesta al impulso: $h(n) = \delta^2(n) = \delta(n)$. De nuevo el sistema **no es lineal**, así que $h(n)$ no lo caracteriza. Aplicando la definición:
+
+$$
+|x(n)| \leq B_x \;\Rightarrow\; |y(n)| = |x(n)|^2 \leq B_x^2 < \infty
+$$
+
+**Estable.**
+
+| Sistema | $h(n)$ | ¿LTI? | Estable BIBO |
+|:---|:---:|:---:|:---:|
+| $y(n) = -0.7\,y(n-1) + x(n)$ | $(-0.7)^n u(n)$ | Sí | Sí |
+| $y(n) = \log[x(n)+1] + 0.5\,y(n-1)$ | $\log(2)\,(0.5)^n u(n)$ | No | No (sí si $x(n) + 1 \geq \varepsilon > 0$) |
+| $y(n) = x^2(n)$ | $\delta(n)$ | No | Sí |

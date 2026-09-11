@@ -1,0 +1,815 @@
+---
+title: "Ecuaciones diferenciales y ecuaciones en diferencias"
+subtitle: "Sistemas LTI en tiempo continuo y discreto: enunciados y soluciones"
+lang: es
+format:
+  html:
+    toc: true
+    html-math-method: mathjax
+  pdf:
+    toc: true
+---
+
+# Resumen teórico
+
+## Método clásico de resolución
+
+La solución total es la suma de la solución homogénea y una solución particular: $y = y_h + y_p$.
+
+**Tiempo continuo.** Para $\;a_2\,y''(t) + a_1\,y'(t) + a_0\,y(t) = x(t)$:
+
+1. Ecuación característica: $a_2\lambda^2 + a_1\lambda + a_0 = 0$.
+2. Solución homogénea según el tipo de raíces (tabla siguiente).
+3. Solución particular con la forma de la entrada (tabla de soluciones particulares).
+4. Constantes a partir de las condiciones iniciales $y(0)$, $y'(0)$. Si el sistema parte del reposo y el lado derecho no contiene impulsos, $y(0) = y'(0) = 0$.
+
+**Tiempo discreto.** Para $\;y(n) + a_1\,y(n-1) + a_2\,y(n-2) = x(n)$:
+
+1. Ecuación característica: $z^2 + a_1 z + a_2 = 0$ (se obtiene sustituyendo $y(n) = z^n$).
+2. Solución homogénea según el tipo de raíces.
+3. Solución particular con la forma de la entrada.
+4. Constantes: se calculan **iterando la ecuación** las primeras muestras ($y(0)$, $y(1)$, …, tantas como el orden) y se imponen a la solución general. Si el sistema es causal y parte del reposo, $y(n) = 0$ para $n < 0$.
+
+## Casos según las raíces: continuo frente a discreto
+
+| Raíces | Continuo (raíces $\lambda$) | Discreto (raíces $z$) |
+|:---|:---|:---|
+| Reales distintas | $C_1 e^{\lambda_1 t} + C_2 e^{\lambda_2 t}$ | $C_1 z_1^n + C_2 z_2^n$ |
+| Real doble | $(C_1 + C_2\,t)\,e^{\lambda t}$ | $(C_1 + C_2\,n)\,z^n$ |
+| Complejas conjugadas | $\lambda = \sigma \pm j\omega$: $\;e^{\sigma t}\big[C_1\cos\omega t + C_2\sin\omega t\big]$ | $z = \rho\,e^{\pm j\Omega}$: $\;\rho^n\big[C_1\cos\Omega n + C_2\sin\Omega n\big]$ |
+
+## Comportamiento de cada modo y estabilidad
+
+| Comportamiento | Continuo | Discreto |
+|:---|:---|:---|
+| El modo decae | $\text{Re}(\lambda) < 0$ (semiplano izquierdo) | $\lvert z\rvert < 1$ (interior del círculo unidad) |
+| El modo crece | $\text{Re}(\lambda) > 0$ | $\lvert z\rvert > 1$ |
+| Amplitud constante (límite) | $\text{Re}(\lambda) = 0$ (eje imaginario) | $\lvert z\rvert = 1$ (circunferencia unidad) |
+| Modo constante | $\lambda = 0$ | $z = 1$ |
+| Decae sin oscilar | $\lambda$ real negativa | $0 < z < 1$ |
+| Alterna el signo en cada muestra | No existe | $z$ real negativa ($\Omega = \pi$) |
+| Oscila | $\lambda$ compleja: frecuencia $\omega$ | $z$ compleja: frecuencia $\Omega$ |
+| Ritmo de decaimiento o crecimiento | $e^{\sigma t}$ | $\rho^n$ |
+| Sistema causal estable BIBO | Todas las raíces con $\text{Re}(\lambda) < 0$ | Todas las raíces con $\lvert z\rvert < 1$ |
+| Correspondencia al muestrear con periodo $T$ | $\lambda$ | $z = e^{\lambda T}$ |
+
+## Soluciones particulares
+
+| Entrada | Continuo | Discreto |
+|:---|:---|:---|
+| Constante | $K$ | $K$ |
+| Exponencial $e^{at}$ / $a^n$ | $K\,e^{at}$ | $K\,a^n$ |
+| Sinusoidal | $K_1\cos\omega t + K_2\sin\omega t$ | $K_1\cos\Omega n + K_2\sin\Omega n$ |
+| La entrada coincide con un modo de multiplicidad $m$ | Multiplicar por $t^m$ | Multiplicar por $n^m$ |
+
+---
+
+# Bloque 1: ecuaciones homogéneas
+
+## Problema 1 (continuo, raíces reales)
+
+Resuelve las siguientes ecuaciones diferenciales con condiciones iniciales $y(0) = 1$, $y'(0) = 0$:
+
+a) $y''(t) + 3y'(t) + 2y(t) = 0$
+
+b) $y''(t) + 4y'(t) + 4y(t) = 0$
+
+### Solución
+
+**a)** Ecuación característica: $\lambda^2 + 3\lambda + 2 = 0 \;\Rightarrow\; \lambda_1 = -1,\ \lambda_2 = -2$ (reales distintas).
+
+$$
+y(t) = A\,e^{-t} + B\,e^{-2t}
+\qquad
+y'(t) = -A\,e^{-t} - 2B\,e^{-2t}
+$$
+
+$$
+\begin{cases}
+y(0) = A + B = 1 \\
+y'(0) = -A - 2B = 0
+\end{cases}
+\;\Rightarrow\; A = 2,\ B = -1
+$$
+
+$$
+y(t) = 2e^{-t} - e^{-2t}, \quad t \geq 0
+$$
+
+**b)** Ecuación característica: $\lambda^2 + 4\lambda + 4 = (\lambda + 2)^2 = 0 \;\Rightarrow\; \lambda = -2$ (doble).
+
+$$
+y(t) = (A + B\,t)\,e^{-2t}
+\qquad
+y'(t) = B\,e^{-2t} - 2(A + B\,t)\,e^{-2t}
+$$
+
+$$
+y(0) = A = 1
+\qquad
+y'(0) = B - 2A = 0 \;\Rightarrow\; B = 2
+$$
+
+$$
+y(t) = (1 + 2t)\,e^{-2t}, \quad t \geq 0
+$$
+
+---
+
+## Problema 2 (discreto, raíces reales)
+
+Resuelve las siguientes ecuaciones en diferencias:
+
+a) $y(n) = 0.75\,y(n-1) - 0.125\,y(n-2)$, con $y(-1) = 1$, $y(-2) = 0$
+
+b) $y(n) = y(n-1) - 0.25\,y(n-2)$, con $y(0) = 1$, $y(1) = 0$
+
+### Solución
+
+**a)** Reescrita como $y(n) - 0.75\,y(n-1) + 0.125\,y(n-2) = 0$, su ecuación característica es
+
+$$
+z^2 - 0.75z + 0.125 = 0 \;\Rightarrow\; z_1 = 0.5,\ z_2 = 0.25
+$$
+
+Como la ecuación es homogénea, la solución $y(n) = A(0.5)^n + B(0.25)^n$ vale también para $n$ negativos, y se pueden usar directamente las condiciones dadas:
+
+$$
+\begin{cases}
+y(-1) = 2A + 4B = 1 \\
+y(-2) = 4A + 16B = 0
+\end{cases}
+\;\Rightarrow\; A = 1,\ B = -\tfrac{1}{4}
+$$
+
+$$
+y(n) = (0.5)^n - \tfrac{1}{4}(0.25)^n = (0.5)^n - (0.25)^{n+1}
+$$
+
+Comprobación: iterando, $y(0) = 0.75\cdot 1 - 0.125\cdot 0 = 0.75$, y la fórmula da $1 - 0.25 = 0.75$.
+
+**b)** Ecuación característica: $z^2 - z + 0.25 = (z - 0.5)^2 = 0 \;\Rightarrow\; z = 0.5$ (doble).
+
+$$
+y(n) = (A + B\,n)(0.5)^n
+$$
+
+$$
+y(0) = A = 1
+\qquad
+y(1) = (1 + B)\cdot 0.5 = 0 \;\Rightarrow\; B = -1
+$$
+
+$$
+y(n) = (1 - n)(0.5)^n
+$$
+
+---
+
+## Problema 3 (continuo, raíces complejas)
+
+Resuelve $y''(t) + 2y'(t) + 5y(t) = 0$ con $y(0) = 1$, $y'(0) = 0$.
+
+### Solución
+
+Ecuación característica:
+
+$$
+\lambda^2 + 2\lambda + 5 = 0 \;\Rightarrow\; \lambda = \frac{-2 \pm \sqrt{4 - 20}}{2} = -1 \pm 2j
+$$
+
+Con $\sigma = -1$ y $\omega = 2$:
+
+$$
+y(t) = e^{-t}\big[C_1\cos 2t + C_2\sin 2t\big]
+$$
+
+$$
+y(0) = C_1 = 1
+\qquad
+y'(0) = -C_1 + 2C_2 = 0 \;\Rightarrow\; C_2 = \tfrac{1}{2}
+$$
+
+$$
+y(t) = e^{-t}\left[\cos 2t + \tfrac{1}{2}\sin 2t\right], \quad t \geq 0
+$$
+
+En forma de amplitud y fase: $y(t) = \dfrac{\sqrt{5}}{2}\,e^{-t}\cos\!\big(2t - \arctan\tfrac{1}{2}\big)$. Es una oscilación de $2\,\text{rad/s}$ amortiguada por $e^{-t}$.
+
+---
+
+## Problema 4 (discreto, raíces complejas)
+
+Resuelve $y(n) = y(n-1) - 0.5\,y(n-2)$ con $y(0) = 1$, $y(1) = 1$.
+
+### Solución
+
+Ecuación característica:
+
+$$
+z^2 - z + 0.5 = 0 \;\Rightarrow\; z = \frac{1 \pm \sqrt{1 - 2}}{2} = 0.5 \pm 0.5j
+$$
+
+En forma polar: $\rho = \sqrt{0.5^2 + 0.5^2} = \dfrac{\sqrt{2}}{2}$ y $\Omega = \arctan\dfrac{0.5}{0.5} = \dfrac{\pi}{4}$.
+
+$$
+y(n) = \left(\frac{\sqrt{2}}{2}\right)^n\left[C_1\cos\frac{\pi n}{4} + C_2\sin\frac{\pi n}{4}\right]
+$$
+
+$$
+y(0) = C_1 = 1
+\qquad
+y(1) = \frac{\sqrt{2}}{2}\left[\frac{\sqrt{2}}{2} + C_2\frac{\sqrt{2}}{2}\right] = \frac{1 + C_2}{2} = 1 \;\Rightarrow\; C_2 = 1
+$$
+
+$$
+y(n) = \left(\frac{\sqrt{2}}{2}\right)^n\left[\cos\frac{\pi n}{4} + \sin\frac{\pi n}{4}\right] = \sqrt{2}\left(\frac{\sqrt{2}}{2}\right)^n\cos\!\left(\frac{\pi n}{4} - \frac{\pi}{4}\right)
+$$
+
+Comprobación: iterando, $y(2) = 1 - 0.5 = 0.5$, y la fórmula da $\tfrac{1}{2}[0 + 1] = 0.5$.
+
+Comparando con el problema 3: allí la envolvente es $e^{\sigma t}$ y aquí $\rho^n$; allí la frecuencia es $\omega$ (rad/s) y aquí $\Omega$ (rad/muestra).
+
+---
+
+# Bloque 2: sistemas discretos
+
+## Problema 5
+
+Determina la solución a las siguientes ecuaciones en diferencias que representan sistemas causales, considerando que la entrada es la función escalón unitario $u(n)$:
+
+a) $y(n) = 0.7\,y(n-1) + x(n)$
+
+b) $y(n) = -0.7\,y(n-1) - 0.1\,y(n-2) + x(n)$
+
+### Solución
+
+**a)** Raíz característica: $z = 0.7$. Solución particular constante: $K = 0.7K + 1 \Rightarrow K = \dfrac{10}{3}$.
+
+$$
+y(n) = A(0.7)^n + \frac{10}{3}
+$$
+
+Iterando con reposo inicial: $y(0) = 1$, así que $A + \dfrac{10}{3} = 1 \Rightarrow A = -\dfrac{7}{3}$.
+
+$$
+y(n) = \left[\frac{10}{3} - \frac{7}{3}(0.7)^n\right]u(n)
+$$
+
+**b)** Reescrita como $y(n) + 0.7\,y(n-1) + 0.1\,y(n-2) = x(n)$:
+
+$$
+z^2 + 0.7z + 0.1 = 0 \;\Rightarrow\; z_1 = -0.2,\ z_2 = -0.5
+$$
+
+Solución particular constante: $K(1 + 0.7 + 0.1) = 1 \Rightarrow K = \dfrac{5}{9}$.
+
+Iterando: $y(0) = 1$ e $y(1) = -0.7\cdot 1 + 1 = 0.3$. Con $y(n) = A(-0.2)^n + B(-0.5)^n + \tfrac{5}{9}$:
+
+$$
+\begin{cases}
+A + B + \tfrac{5}{9} = 1 \\
+-0.2A - 0.5B + \tfrac{5}{9} = 0.3
+\end{cases}
+\;\Rightarrow\; A = -\tfrac{1}{9},\ B = \tfrac{5}{9}
+$$
+
+$$
+y(n) = \left[\frac{5}{9} - \frac{1}{9}(-0.2)^n + \frac{5}{9}(-0.5)^n\right]u(n)
+$$
+
+Las raíces negativas hacen que los términos transitorios alternen de signo mientras decaen hacia el valor final $5/9$.
+
+---
+
+## Problema 6
+
+Un sistema discreto LTI causal tiene como ecuación en diferencias $y(n) = 0.4\cdot y(n-1) + 3\cdot x(n-1)$. Determina: a) la respuesta impulsional del sistema, ¿es FIR o IIR?; b) demuestra si es, o no, estable BIBO; c) la salida del sistema si la entrada es $x(n) = \delta(n) + \left(\tfrac{1}{2}\right)^n u(n)$.
+
+### Solución
+
+**a)** Con $x(n) = \delta(n)$ y reposo inicial: $h(0) = 0$, $h(1) = 3$ y $h(n) = 0.4\,h(n-1)$ para $n \geq 2$.
+
+$$
+h(n) = 3\,(0.4)^{n-1}\,u(n-1)
+$$
+
+Tiene infinitas muestras no nulas: es **IIR**.
+
+**b)**
+
+$$
+\sum_{n=1}^{\infty} |h(n)| = 3\sum_{m=0}^{\infty} (0.4)^m = \frac{3}{1 - 0.4} = 5 < \infty
+$$
+
+**Estable BIBO.**
+
+**c)** Por linealidad, $y(n) = h(n) + y_2(n)$, donde $y_2(n)$ es la respuesta a $\left(\tfrac{1}{2}\right)^n u(n)$.
+
+Para $y_2$: $y_2(0) = 0$ y, para $n \geq 1$, $y_2(n) = 0.4\,y_2(n-1) + 3(0.5)^{n-1} = 0.4\,y_2(n-1) + 6(0.5)^n$.
+Solución particular $K(0.5)^n$:
+
+$$
+K(0.5)^n - 0.4K(0.5)^{n-1} = 0.2K(0.5)^n = 6(0.5)^n \;\Rightarrow\; K = 30
+$$
+
+$y_2(n) = A(0.4)^n + 30(0.5)^n$ con $y_2(0) = 0 \Rightarrow A = -30$:
+
+$$
+y_2(n) = 30\big[(0.5)^n - (0.4)^n\big]u(n)
+$$
+
+Sumando $h(n) = 7.5\,(0.4)^n\,u(n-1)$:
+
+$$
+y(n) = \big[30(0.5)^n - 22.5(0.4)^n\big]u(n-1)
+$$
+
+Comprobación: iterando, $y(1) = 3\,x(0) = 3\cdot 2 = 6$, y la fórmula da $15 - 9 = 6$.
+
+---
+
+## Problema 7
+
+Un sistema discreto causal tiene como ecuación en diferencias $y(n) = 0.25\,y(n-1) + x(n) - x(n-1)$. Determina: a) la respuesta impulsional del sistema, ¿es FIR o IIR?; b) demuestra si es, o no, estable BIBO; c) la salida del sistema si la entrada es $x(n) = \left(\tfrac{1}{2}\right)^n u(n)$.
+
+### Solución
+
+**a)** Con $x(n) = \delta(n)$: $h(0) = 1$, $h(1) = 0.25 - 1 = -0.75$ y $h(n) = 0.25\,h(n-1)$ para $n \geq 2$.
+
+$$
+h(n) = \delta(n) - 0.75\,(0.25)^{n-1}\,u(n-1) = (0.25)^n u(n) - (0.25)^{n-1}u(n-1)
+$$
+
+**IIR.**
+
+**b)**
+
+$$
+\sum_{n} |h(n)| = 1 + 0.75\sum_{m=0}^{\infty}(0.25)^m = 1 + 0.75\cdot\frac{4}{3} = 2 < \infty
+$$
+
+**Estable BIBO.**
+
+**c)** El lado derecho vale $x(0) = 1$ en $n = 0$ y, para $n \geq 1$, $x(n) - x(n-1) = (0.5)^n - (0.5)^{n-1} = -(0.5)^n$.
+Solución particular para $n \geq 1$:
+
+$$
+K(0.5)^n - 0.25K(0.5)^{n-1} = 0.5K(0.5)^n = -(0.5)^n \;\Rightarrow\; K = -2
+$$
+
+$y(n) = A(0.25)^n - 2(0.5)^n$, ajustada con $y(0) = 1$: $A - 2 = 1 \Rightarrow A = 3$.
+
+$$
+y(n) = \big[3(0.25)^n - 2(0.5)^n\big]u(n)
+$$
+
+Comprobación: $y(1) = 0.25 + 0.5 - 1 = -0.25$, y la fórmula da $0.75 - 1 = -0.25$.
+
+---
+
+## Problema 8
+
+Un sistema discreto causal tiene como ecuación en diferencias $y(n) = 0.2\,y(n-1) + x(n) - x(n-1)$. Determina: a) la respuesta impulsional del sistema, ¿es FIR o IIR?; b) demuestra si es, o no, estable BIBO; c) la salida del sistema si la entrada es $x(n) = \left(\tfrac{1}{4}\right)^n u(n-1)$.
+
+### Solución
+
+**a)** Con $x(n) = \delta(n)$: $h(0) = 1$, $h(1) = 0.2 - 1 = -0.8$ y $h(n) = 0.2\,h(n-1)$ para $n \geq 2$.
+
+$$
+h(n) = \delta(n) - 0.8\,(0.2)^{n-1}\,u(n-1) = \delta(n) - 4\,(0.2)^n\,u(n-1)
+$$
+
+**IIR.**
+
+**b)**
+
+$$
+\sum_{n} |h(n)| = 1 + 0.8\sum_{m=0}^{\infty}(0.2)^m = 1 + \frac{0.8}{0.8} = 2 < \infty
+$$
+
+**Estable BIBO.**
+
+**c)** Atención: la entrada empieza en $n = 1$ ($x(0) = 0$, $x(n) = (1/4)^n$ para $n \geq 1$). El lado derecho vale:
+
+- $n = 0$: $0$, luego $y(0) = 0$.
+- $n = 1$: $x(1) - x(0) = \tfrac{1}{4}$, luego $y(1) = \tfrac{1}{4}$.
+- $n \geq 2$: $(0.25)^n - (0.25)^{n-1} = -3(0.25)^n$.
+
+Solución particular para $n \geq 2$:
+
+$$
+K(0.25)^n - 0.2K(0.25)^{n-1} = 0.2K(0.25)^n = -3(0.25)^n \;\Rightarrow\; K = -15
+$$
+
+$y(n) = A(0.2)^n - 15(0.25)^n$ para $n \geq 1$, ajustada con $y(1) = \tfrac{1}{4}$: $0.2A - 3.75 = 0.25 \Rightarrow A = 20$.
+
+$$
+y(n) = \big[20(0.2)^n - 15(0.25)^n\big]u(n-1)
+$$
+
+Comprobación: iterando, $y(2) = 0.2\cdot 0.25 - 3/16 = -0.1375$, y la fórmula da $0.8 - 0.9375 = -0.1375$.
+
+---
+
+## Problema 9
+
+Determina la salida del sistema LTI discreto y causal definido por la ecuación en diferencias $y(n) = -3\,y(n-1) + 4\,x(n-1)$ cuando la entrada es la señal escalón (determínala por dos procedimientos diferentes).
+
+### Solución
+
+**Procedimiento 1: método clásico.** Raíz característica: $z = -3$. Solución particular constante: $K = -3K + 4 \Rightarrow K = 1$.
+Iterando: $y(0) = -3\cdot 0 + 4\,x(-1) = 0$. Con $y(n) = A(-3)^n + 1$: $A + 1 = 0 \Rightarrow A = -1$.
+
+$$
+y(n) = \big[1 - (-3)^n\big]u(n)
+$$
+
+**Procedimiento 2: convolución.** La respuesta impulsional es $h(0) = 0$, $h(1) = 4$, $h(n) = -3\,h(n-1)$, es decir, $h(n) = 4(-3)^{n-1}u(n-1)$. La respuesta al escalón es la suma acumulada de $h$:
+
+$$
+y(n) = \sum_{k=-\infty}^{n} h(k) = 4\sum_{k=1}^{n}(-3)^{k-1} = 4\cdot\frac{1 - (-3)^n}{1 - (-3)} = 1 - (-3)^n, \quad n \geq 0
+$$
+
+Ambos procedimientos coinciden. Comprobación: $y(1) = 4$, $y(2) = -12 + 4 = -8$, y la fórmula da $1 + 3 = 4$ y $1 - 9 = -8$.
+
+Como $|z| = 3 > 1$, el sistema es inestable: la salida alterna de signo con amplitud creciente.
+
+---
+
+## Problema 10
+
+Determina la salida del sistema LTI discreto y causal definido por la ecuación en diferencias $y(n) = 7\,y(n-1) - 10\cdot y(n-2) + 2\,x(n)$ cuando la entrada es la señal escalón. ¿El sistema es estable BIBO?
+
+### Solución
+
+Reescrita como $y(n) - 7\,y(n-1) + 10\,y(n-2) = 2\,x(n)$:
+
+$$
+z^2 - 7z + 10 = 0 \;\Rightarrow\; z_1 = 2,\ z_2 = 5
+$$
+
+Solución particular constante: $K(1 - 7 + 10) = 2 \Rightarrow K = \dfrac{1}{2}$.
+
+Iterando: $y(0) = 2$ e $y(1) = 7\cdot 2 + 2 = 16$. Con $y(n) = A\,2^n + B\,5^n + \tfrac{1}{2}$:
+
+$$
+\begin{cases}
+A + B = \tfrac{3}{2} \\
+2A + 5B = \tfrac{31}{2}
+\end{cases}
+\;\Rightarrow\; A = -\tfrac{8}{3},\ B = \tfrac{25}{6}
+$$
+
+$$
+y(n) = \left[\frac{1}{2} - \frac{8}{3}\,2^n + \frac{25}{6}\,5^n\right]u(n)
+$$
+
+**No es estable BIBO:** las raíces $2$ y $5$ están fuera del círculo unidad, y de hecho la entrada acotada $u(n)$ produce una salida que crece como $5^n$.
+
+---
+
+## Problema 11
+
+Determina la solución a la siguiente ecuación en diferencias, que representa un sistema causal, considerando que la entrada es la señal $x(n) = \left(\tfrac{1}{4}\right)^n u(n)$:
+
+$$
+y(n) = -7\,y(n-1) - 12\,y(n-2) + x(n)
+$$
+
+### Solución
+
+Reescrita como $y(n) + 7\,y(n-1) + 12\,y(n-2) = x(n)$:
+
+$$
+z^2 + 7z + 12 = 0 \;\Rightarrow\; z_1 = -3,\ z_2 = -4
+$$
+
+Solución particular $K\left(\tfrac{1}{4}\right)^n$:
+
+$$
+K\left(\tfrac{1}{4}\right)^n\big[1 + 7\cdot 4 + 12\cdot 16\big] = 221K\left(\tfrac{1}{4}\right)^n = \left(\tfrac{1}{4}\right)^n \;\Rightarrow\; K = \frac{1}{221}
+$$
+
+Iterando: $y(0) = 1$ e $y(1) = -7 + \tfrac{1}{4} = -\tfrac{27}{4}$. Con $y(n) = A(-3)^n + B(-4)^n + \tfrac{1}{221}\left(\tfrac{1}{4}\right)^n$:
+
+$$
+\begin{cases}
+A + B = \tfrac{220}{221} \\
+-3A - 4B = -\tfrac{27}{4} - \tfrac{1}{884} = -\tfrac{1492}{221}
+\end{cases}
+\;\Rightarrow\; A = -\tfrac{36}{13},\ B = \tfrac{64}{17}
+$$
+
+$$
+y(n) = \left[-\frac{36}{13}(-3)^n + \frac{64}{17}(-4)^n + \frac{1}{221}\left(\frac{1}{4}\right)^n\right]u(n)
+$$
+
+El sistema es inestable ($|z| = 3$ y $4$), así que la salida crece alternando de signo.
+
+---
+
+## Problema 12
+
+Determina la solución a la ecuación en diferencias $y(n) = -0.8\,y(n-1) - 0.12\,y(n-2) + x(n)$ considerando que la entrada es $x(n) = \left(-\tfrac{1}{2}\right)^n u(n)$ y con las condiciones iniciales $y(-1) = y(-2) = 1$.
+
+### Solución
+
+Reescrita como $y(n) + 0.8\,y(n-1) + 0.12\,y(n-2) = x(n)$:
+
+$$
+z^2 + 0.8z + 0.12 = 0 \;\Rightarrow\; z_1 = -0.2,\ z_2 = -0.6
+$$
+
+Solución particular $K\left(-\tfrac{1}{2}\right)^n$:
+
+$$
+K\left(-\tfrac{1}{2}\right)^n\big[1 + 0.8\cdot(-2) + 0.12\cdot 4\big] = -0.12K\left(-\tfrac{1}{2}\right)^n = \left(-\tfrac{1}{2}\right)^n \;\Rightarrow\; K = -\frac{25}{3}
+$$
+
+Iterando con las condiciones iniciales:
+
+$$
+y(0) = -0.8\cdot 1 - 0.12\cdot 1 + 1 = 0.08
+\qquad
+y(1) = -0.8\cdot 0.08 - 0.12\cdot 1 - 0.5 = -0.684
+$$
+
+Con $y(n) = A(-0.2)^n + B(-0.6)^n - \tfrac{25}{3}(-0.5)^n$:
+
+$$
+\begin{cases}
+A + B - \tfrac{25}{3} = 0.08 \\
+-0.2A - 0.6B + \tfrac{25}{6} = -0.684
+\end{cases}
+\;\Rightarrow\; A = \tfrac{37}{75},\ B = \tfrac{198}{25}
+$$
+
+$$
+y(n) = \frac{37}{75}(-0.2)^n + \frac{198}{25}(-0.6)^n - \frac{25}{3}(-0.5)^n, \quad n \geq 0
+$$
+
+**Descomposición en respuesta libre y forzada.** Se obtiene el mismo resultado sumando:
+
+- Respuesta a entrada nula (solo condiciones iniciales): $y_{zi}(0) = -0.92$, $y_{zi}(1) = 0.616$, de donde $y_{zi}(n) = 0.16(-0.2)^n - 1.08(-0.6)^n$.
+- Respuesta a estado nulo (solo entrada, reposo inicial): $y_{zs}(n) = \tfrac{1}{3}(-0.2)^n + 9(-0.6)^n - \tfrac{25}{3}(-0.5)^n$.
+
+Se comprueba que $0.16 + \tfrac{1}{3} = \tfrac{37}{75}$ y $-1.08 + 9 = 7.92 = \tfrac{198}{25}$.
+
+---
+
+## Problema 13
+
+Dado el sistema LTI causal definido por la ecuación en diferencias $y(n) = x(n) + x(n-1) - 0.9\cdot y(n-1) - 0.81\cdot y(n-2)$, determina la salida que se obtiene si la entrada es la función escalón.
+
+### Solución
+
+Reescrita como $y(n) + 0.9\,y(n-1) + 0.81\,y(n-2) = x(n) + x(n-1)$:
+
+$$
+z^2 + 0.9z + 0.81 = 0 \;\Rightarrow\; z = -0.45 \pm j\,0.45\sqrt{3}
+$$
+
+En forma polar: $\rho = \sqrt{0.45^2 + 3\cdot 0.45^2} = 0.9$ y $\cos\Omega = -0.45/0.9 = -\tfrac{1}{2} \Rightarrow \Omega = \dfrac{2\pi}{3}$. Es decir, $z = 0.9\,e^{\pm j2\pi/3}$. Como $|z| < 1$, el sistema es **estable**.
+
+Para $n \geq 1$ el lado derecho vale $1 + 1 = 2$, así que la solución particular es constante:
+
+$$
+K(1 + 0.9 + 0.81) = 2 \;\Rightarrow\; K = \frac{200}{271}
+$$
+
+Iterando: $y(0) = 1$ e $y(1) = 1 + 1 - 0.9\cdot 1 = 1.1$. Con $y(n) = (0.9)^n\big[C_1\cos\tfrac{2\pi n}{3} + C_2\sin\tfrac{2\pi n}{3}\big] + \tfrac{200}{271}$:
+
+$$
+y(0):\; C_1 + \tfrac{200}{271} = 1 \;\Rightarrow\; C_1 = \tfrac{71}{271}
+$$
+
+$$
+y(1):\; 0.9\left[-\tfrac{1}{2}C_1 + \tfrac{\sqrt{3}}{2}C_2\right] + \tfrac{200}{271} = 1.1 \;\Rightarrow\; C_2 = \frac{289}{271\sqrt{3}} = \frac{289\sqrt{3}}{813} \approx 0.6157
+$$
+
+$$
+y(n) = \left[\frac{200}{271} + (0.9)^n\left(\frac{71}{271}\cos\frac{2\pi n}{3} + \frac{289\sqrt{3}}{813}\sin\frac{2\pi n}{3}\right)\right]u(n)
+$$
+
+La salida oscila con periodo de 3 muestras, amortiguada por $(0.9)^n$, y tiende a $\tfrac{200}{271} \approx 0.738$.
+
+---
+
+## Problema 14
+
+Determina la solución a la ecuación en diferencias (representa un sistema LTI causal) $y(n) = -4\sqrt{2}\cdot y(n-1) - 16\cdot y(n-2) + x(n)$ si la entrada es $x(n) = \left(\tfrac{1}{4}\right)^n u(n)$.
+
+### Solución
+
+Reescrita como $y(n) + 4\sqrt{2}\,y(n-1) + 16\,y(n-2) = x(n)$:
+
+$$
+z^2 + 4\sqrt{2}\,z + 16 = 0 \;\Rightarrow\; z = \frac{-4\sqrt{2} \pm \sqrt{32 - 64}}{2} = -2\sqrt{2} \pm j\,2\sqrt{2}
+$$
+
+En forma polar: $\rho = \sqrt{8 + 8} = 4$ y $\Omega = \dfrac{3\pi}{4}$ (segundo cuadrante), es decir, $z = 4\,e^{\pm j3\pi/4}$. Como $|z| = 4 > 1$, el sistema es **inestable**.
+
+Solución particular $K\left(\tfrac{1}{4}\right)^n$:
+
+$$
+K\left(\tfrac{1}{4}\right)^n\big[1 + 4\sqrt{2}\cdot 4 + 16\cdot 16\big] = K\left(257 + 16\sqrt{2}\right)\left(\tfrac{1}{4}\right)^n
+\;\Rightarrow\;
+K = \frac{1}{257 + 16\sqrt{2}} = \frac{257 - 16\sqrt{2}}{65537} \approx 0.003576
+$$
+
+Iterando: $y(0) = 1$ e $y(1) = -4\sqrt{2} + \tfrac{1}{4} \approx -5.4069$. Con $y(n) = 4^n\big[C_1\cos\tfrac{3\pi n}{4} + C_2\sin\tfrac{3\pi n}{4}\big] + K\left(\tfrac{1}{4}\right)^n$:
+
+$$
+y(0):\; C_1 = 1 - K = \frac{65280 + 16\sqrt{2}}{65537} \approx 0.99642
+$$
+
+$$
+y(1):\; 4\cdot\frac{\sqrt{2}}{2}\,(C_2 - C_1) + \frac{K}{4} = -4\sqrt{2} + \frac{1}{4}
+\;\Rightarrow\;
+C_2 = \frac{4096\sqrt{2} - 65792}{65537} \approx -0.91550
+$$
+
+$$
+y(n) = \left[4^n\left(0.99642\cos\frac{3\pi n}{4} - 0.91550\sin\frac{3\pi n}{4}\right) + 0.003576\left(\frac{1}{4}\right)^n\right]u(n)
+$$
+
+La salida oscila con amplitud creciente como $4^n$.
+
+---
+
+# Bloque 3: sistemas continuos
+
+## Problema 15
+
+Un sistema LTI continuo y causal está definido por $y'(t) + 2y(t) = x(t)$. Determina: a) la respuesta impulsional; ¿es estable BIBO?; b) la salida si la entrada es $x(t) = u(t)$; c) la salida si la entrada es $x(t) = e^{-2t}u(t)$.
+
+*(Análogo continuo de los problemas 5a y 9.)*
+
+### Solución
+
+**a)** Raíz característica: $\lambda = -2$. El impulso de entrada provoca un salto unidad en $y$ en $t = 0$ (integrando la ecuación entre $0^-$ y $0^+$: $y(0^+) = 1$). Para $t > 0$ la ecuación es homogénea:
+
+$$
+h(t) = e^{-2t}u(t)
+\qquad
+\int_0^{\infty} e^{-2t}\,dt = \frac{1}{2} < \infty
+$$
+
+**Estable BIBO** (la raíz tiene parte real negativa).
+
+**b)** Solución particular constante: $2K = 1 \Rightarrow K = \tfrac{1}{2}$. Con $y(t) = A\,e^{-2t} + \tfrac{1}{2}$ e $y(0) = 0$:
+
+$$
+y(t) = \frac{1}{2}\left(1 - e^{-2t}\right)u(t)
+$$
+
+**c)** La entrada coincide con el modo del sistema ($\lambda = -2$), así que la solución particular $K e^{-2t}$ no sirve: se multiplica por $t$.
+
+$$
+y_p = K\,t\,e^{-2t}
+\;\Rightarrow\;
+y_p' + 2y_p = K e^{-2t} - 2Kt\,e^{-2t} + 2Kt\,e^{-2t} = K e^{-2t} = e^{-2t}
+\;\Rightarrow\; K = 1
+$$
+
+Con $y(t) = A\,e^{-2t} + t\,e^{-2t}$ e $y(0) = 0 \Rightarrow A = 0$:
+
+$$
+y(t) = t\,e^{-2t}\,u(t)
+$$
+
+---
+
+## Problema 16
+
+Un sistema LTI continuo y causal, inicialmente en reposo, está definido por $y''(t) + 5y'(t) + 6y(t) = x(t)$. Determina la salida si la entrada es $x(t) = e^{-t}u(t)$.
+
+*(Análogo continuo del problema 11, con raíces reales y entrada exponencial.)*
+
+### Solución
+
+$$
+\lambda^2 + 5\lambda + 6 = 0 \;\Rightarrow\; \lambda_1 = -2,\ \lambda_2 = -3
+$$
+
+Solución particular $K e^{-t}$:
+
+$$
+K e^{-t}\big[(-1)^2 + 5(-1) + 6\big] = 2K e^{-t} = e^{-t} \;\Rightarrow\; K = \frac{1}{2}
+$$
+
+Reposo inicial y lado derecho sin impulsos: $y(0) = y'(0) = 0$. Con $y(t) = A\,e^{-2t} + B\,e^{-3t} + \tfrac{1}{2}e^{-t}$:
+
+$$
+\begin{cases}
+A + B + \tfrac{1}{2} = 0 \\
+-2A - 3B - \tfrac{1}{2} = 0
+\end{cases}
+\;\Rightarrow\; A = -1,\ B = \tfrac{1}{2}
+$$
+
+$$
+y(t) = \left[\frac{1}{2}e^{-t} - e^{-2t} + \frac{1}{2}e^{-3t}\right]u(t)
+$$
+
+---
+
+## Problema 17
+
+Determina la salida del sistema LTI continuo y causal, inicialmente en reposo, definido por $y''(t) - 3y'(t) + 2y(t) = x(t)$ cuando la entrada es la señal escalón. ¿Es estable BIBO?
+
+*(Análogo continuo del problema 10.)*
+
+### Solución
+
+$$
+\lambda^2 - 3\lambda + 2 = 0 \;\Rightarrow\; \lambda_1 = 1,\ \lambda_2 = 2
+$$
+
+Solución particular constante: $2K = 1 \Rightarrow K = \tfrac{1}{2}$. Con $y(t) = A\,e^{t} + B\,e^{2t} + \tfrac{1}{2}$ e $y(0) = y'(0) = 0$:
+
+$$
+\begin{cases}
+A + B + \tfrac{1}{2} = 0 \\
+A + 2B = 0
+\end{cases}
+\;\Rightarrow\; A = -1,\ B = \tfrac{1}{2}
+$$
+
+$$
+y(t) = \left[\frac{1}{2} - e^{t} + \frac{1}{2}e^{2t}\right]u(t)
+$$
+
+**No es estable BIBO:** las raíces tienen parte real positiva, y la entrada acotada $u(t)$ produce una salida que crece como $e^{2t}$.
+
+---
+
+## Problema 18
+
+Resuelve la ecuación diferencial $y''(t) + 3y'(t) + 2y(t) = x(t)$ considerando que la entrada es $x(t) = e^{-3t}u(t)$ y con las condiciones iniciales $y(0^-) = 1$, $y'(0^-) = 0$.
+
+*(Análogo continuo del problema 12.)*
+
+### Solución
+
+$$
+\lambda^2 + 3\lambda + 2 = 0 \;\Rightarrow\; \lambda_1 = -1,\ \lambda_2 = -2
+$$
+
+Solución particular $K e^{-3t}$:
+
+$$
+K e^{-3t}\big[9 - 9 + 2\big] = 2K e^{-3t} = e^{-3t} \;\Rightarrow\; K = \frac{1}{2}
+$$
+
+La entrada no contiene impulsos, así que $y$ e $y'$ son continuas en $t = 0$: $y(0^+) = 1$, $y'(0^+) = 0$. Con $y(t) = A\,e^{-t} + B\,e^{-2t} + \tfrac{1}{2}e^{-3t}$:
+
+$$
+\begin{cases}
+A + B + \tfrac{1}{2} = 1 \\
+-A - 2B - \tfrac{3}{2} = 0
+\end{cases}
+\;\Rightarrow\; A = \tfrac{5}{2},\ B = -2
+$$
+
+$$
+y(t) = \frac{5}{2}e^{-t} - 2e^{-2t} + \frac{1}{2}e^{-3t}, \quad t \geq 0
+$$
+
+**Descomposición en respuesta libre y forzada:**
+
+- Respuesta a entrada nula: $y_{zi}(t) = 2e^{-t} - e^{-2t}$ (es el problema 1a).
+- Respuesta a estado nulo: $y_{zs}(t) = \tfrac{1}{2}e^{-t} - e^{-2t} + \tfrac{1}{2}e^{-3t}$.
+
+Su suma coincide con la solución total.
+
+---
+
+## Problema 19
+
+Dado el sistema LTI continuo y causal, inicialmente en reposo, definido por $y''(t) + 2y'(t) + 5y(t) = 5\,x(t)$, determina la salida que se obtiene si la entrada es la función escalón.
+
+*(Análogo continuo del problema 13, con raíces complejas.)*
+
+### Solución
+
+$$
+\lambda^2 + 2\lambda + 5 = 0 \;\Rightarrow\; \lambda = -1 \pm 2j
+$$
+
+Parte real negativa: **estable**. Solución particular constante: $5K = 5 \Rightarrow K = 1$.
+
+Con $y(t) = 1 + e^{-t}\big[C_1\cos 2t + C_2\sin 2t\big]$ e $y(0) = y'(0) = 0$:
+
+$$
+y(0) = 1 + C_1 = 0 \;\Rightarrow\; C_1 = -1
+\qquad
+y'(0) = -C_1 + 2C_2 = 0 \;\Rightarrow\; C_2 = -\tfrac{1}{2}
+$$
+
+$$
+y(t) = \left[1 - e^{-t}\left(\cos 2t + \frac{1}{2}\sin 2t\right)\right]u(t)
+$$
+
+La salida oscila a $2\,\text{rad/s}$ con envolvente $e^{-t}$ y tiende a $1$. Es el equivalente continuo del problema 13, donde la envolvente era $(0.9)^n$ y la frecuencia $2\pi/3\,\text{rad/muestra}$.

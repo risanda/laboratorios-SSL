@@ -31,6 +31,12 @@ complejidad.
 
 - [**Señales y sistemas**](problemas/senales_sistemas.qmd): operaciones con
   señales, simetrías, energía y potencia, y muestreo.
+- [**Estabilidad BIBO**](problemas/estabilidad_bibo.qmd): criterios de
+  estabilidad entrada acotada / salida acotada y su aplicación a sistemas
+  continuos y discretos.
+- [**Ecuaciones diferenciales y en diferencias**](problemas/ecuaciones_diff.qmd):
+  resolución por el método clásico, modos según las raíces, soluciones
+  particulares y sistemas discretos.
 - [**Muestreo, cuantización y aliasing**](problemas/problemas_muestreo.qmd):
   dimensionado de sistemas de adquisición, número de bits, error de
   cuantización y frecuencias aparentes.

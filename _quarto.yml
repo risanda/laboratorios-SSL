@@ -23,6 +23,10 @@ website:
         contents:
           - text: "Señales y sistemas"
             href: problemas/senales_sistemas.qmd
+          - text: "Estabilidad BIBO"
+            href: problemas/estabilidad_bibo.qmd
+          - text: "Ecuaciones diferenciales y en diferencias"
+            href: problemas/ecuaciones_diff.qmd
           - text: "Muestreo, cuantización y aliasing"
             href: problemas/problemas_muestreo.qmd
 
