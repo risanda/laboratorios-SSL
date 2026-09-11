@@ -1,0 +1,740 @@
+---
+title: "Señales y sistemas"
+subtitle: "Enunciados y soluciones (ordenados de menor a mayor complejidad dentro de cada bloque)"
+lang: es
+format:
+  html:
+    toc: true
+    html-math-method: mathjax
+  pdf:
+    toc: true
+# Las gráficas son bloques ```{.tikz}, que resuelve el filtro tikz.lua del
+# proyecto (registrado en _quarto.yml). Los estilos que usan los diagramas se
+# inyectan en el preámbulo con el que se compila cada uno.
+tikz-preamble: |
+  \tikzset{ax/.style={-stealth},
+           sig/.style={very thick, blue!70!black, line join=round},
+           gd/.style={densely dashed, gray},
+           tit/.style={font=\small}}
+---
+
+## Definiciones de referencia
+
+- **Linealidad:** $T\{a x_1 + b x_2\} = a\,T\{x_1\} + b\,T\{x_2\}$. Condición necesaria: entrada nula $\Rightarrow$ salida nula.
+- **Invarianza en el tiempo (IVT):** si $x(t) \to y(t)$, entonces $x(t - t_0) \to y(t - t_0)$. Se comprueba comparando la respuesta a la entrada desplazada, $y_1(t)$, con la salida desplazada, $y(t - t_0)$.
+- **Estabilidad BIBO:** toda entrada acotada ($|x| \leq B_x$) produce una salida acotada ($|y| \leq B_y$).
+- **Paridad:** par si $x(-t) = x(t)$; impar si $x(-t) = -x(t)$ (implica $x(0) = 0$).
+- **Periodicidad:** $x(t + T) = x(t)$. Una suma de señales periódicas es periódica si el cociente de sus periodos es racional; el periodo es el mínimo común múltiplo.
+- **Energía:** $E = \displaystyle\int_{-\infty}^{\infty} |x(t)|^2\,dt$ o $E = \displaystyle\sum_{n=-\infty}^{\infty} |x[n]|^2$.
+- **Potencia media:** $P = \displaystyle\lim_{T\to\infty} \frac{1}{2T}\int_{-T}^{T} |x(t)|^2\,dt$ o $P = \displaystyle\lim_{N\to\infty} \frac{1}{2N+1}\sum_{n=-N}^{N} |x[n]|^2$.
+- **Señal de energía:** $0 < E < \infty$ (y entonces $P = 0$). **Señal de potencia:** $0 < P < \infty$ (y entonces $E = \infty$).
+
+---
+
+# Linealidad e invarianza
+
+## Problema 1
+
+Determina si los siguientes sistemas son lineales: a) $y(n) = e^{x(n)}$; b) $y(t) = \dfrac{dx(t)}{dt}$; c) $y(n) = 5\cdot x(n) + 4$.
+
+### Solución
+
+**a)** Con $x = a x_1 + b x_2$:
+
+$$
+e^{a x_1(n) + b x_2(n)} = \left(e^{x_1(n)}\right)^a \left(e^{x_2(n)}\right)^b \neq a\,e^{x_1(n)} + b\,e^{x_2(n)}
+$$
+
+Además, $x(n) = 0 \Rightarrow y(n) = 1 \neq 0$. **No es lineal.**
+
+**b)** La derivada es un operador lineal:
+
+$$
+\frac{d}{dt}\big[a x_1(t) + b x_2(t)\big] = a\frac{dx_1(t)}{dt} + b\frac{dx_2(t)}{dt}
+$$
+
+**Es lineal.**
+
+**c)**
+
+$$
+5\big[a x_1(n) + b x_2(n)\big] + 4 \neq a\big[5x_1(n) + 4\big] + b\big[5x_2(n) + 4\big]
+$$
+
+(los términos independientes no coinciden: $4 \neq 4a + 4b$). Además, $x(n) = 0 \Rightarrow y(n) = 4 \neq 0$. **No es lineal** (es un sistema afín, o incrementalmente lineal).
+
+---
+
+## Problema 2
+
+Determina si los siguientes sistemas son LTI: a) $y(t) = \dfrac{3}{x(t)}$; b) $y(n) = x(n) + 1$; c) $y(n) = x(5n)$.
+
+### Solución
+
+**a)** Linealidad: con $a\,x(t)$ la salida es $\dfrac{3}{a\,x(t)} = \dfrac{y(t)}{a} \neq a\,y(t)$. No es lineal.
+Invarianza: $x_1(t) = x(t - t_0) \Rightarrow y_1(t) = \dfrac{3}{x(t - t_0)} = y(t - t_0)$. Es invariante.
+**No es LTI.**
+
+**b)** Linealidad: $x(n) = 0 \Rightarrow y(n) = 1 \neq 0$. No es lineal.
+Invarianza: $x_1(n) = x(n - n_0) \Rightarrow y_1(n) = x(n - n_0) + 1 = y(n - n_0)$. Es invariante.
+**No es LTI.**
+
+**c)** Linealidad: $a x_1(5n) + b x_2(5n) = a y_1(n) + b y_2(n)$. Es lineal.
+Invarianza: con $x_1(n) = x(n - n_0)$,
+
+$$
+y_1(n) = x_1(5n) = x(5n - n_0)
+\qquad\text{pero}\qquad
+y(n - n_0) = x\big(5(n - n_0)\big) = x(5n - 5n_0)
+$$
+
+No coinciden: no es invariante. **No es LTI** (es un diezmado).
+
+---
+
+## Problema 3
+
+Determina si los siguientes sistemas son (i) lineales, (ii) invariantes en el tiempo, (iii) estables BIBO:
+
+a) $y[n] = x[n] + x[n-2]$  
+b) $y[n] = n\cdot x[n]$  
+c) $y[n] = x[n^2]$  
+d) $y[n] = x[n] + 3$
+
+### Solución
+
+**a)** $y[n] = x[n] + x[n-2]$
+
+- Lineal: sí, es suma de versiones desplazadas de la entrada.
+- Invariante: $x_1[n] = x[n - n_0] \Rightarrow y_1[n] = x[n - n_0] + x[n - n_0 - 2] = y[n - n_0]$. Sí.
+- Estable: $|y[n]| \leq |x[n]| + |x[n-2]| \leq 2B_x$. Sí.
+
+**b)** $y[n] = n\,x[n]$
+
+- Lineal: $n\big(a x_1[n] + b x_2[n]\big) = a\,n x_1[n] + b\,n x_2[n]$. Sí.
+- Invariante: $y_1[n] = n\,x[n - n_0]$, pero $y[n - n_0] = (n - n_0)\,x[n - n_0]$. No.
+- Estable: con $x[n] = 1$ (acotada), $y[n] = n$, que no está acotada. No.
+
+**c)** $y[n] = x[n^2]$
+
+- Lineal: $a x_1[n^2] + b x_2[n^2]$. Sí.
+- Invariante: $y_1[n] = x_1[n^2] = x[n^2 - n_0]$, pero $y[n - n_0] = x\big[(n - n_0)^2\big]$. No.
+- Estable: $|y[n]| = |x[n^2]| \leq B_x$. Sí.
+
+**d)** $y[n] = x[n] + 3$
+
+- Lineal: $x[n] = 0 \Rightarrow y[n] = 3 \neq 0$. No.
+- Invariante: $y_1[n] = x[n - n_0] + 3 = y[n - n_0]$. Sí.
+- Estable: $|y[n]| \leq B_x + 3$. Sí.
+
+| Sistema | Lineal | Invariante | Estable BIBO |
+|:---|:---:|:---:|:---:|
+| $x[n] + x[n-2]$ | Sí | Sí | Sí |
+| $n\,x[n]$ | Sí | No | No |
+| $x[n^2]$ | Sí | No | Sí |
+| $x[n] + 3$ | No | Sí | Sí |
+
+---
+
+## Problema 4
+
+Para cada sistema, determina si es lineal (L) e invariante en el tiempo (IVT):
+
+a) $y[n] = n\cdot x[n]$  
+b) $y(t) = x(t)\cos(2\pi f_0 t)$  
+c) $y[n] = x[n] - x[n-1]$  
+d) $y(t) = \displaystyle\int_{-\infty}^{t} x(\tau)\,d\tau$  
+e) $y[n] = x[n^2]$
+
+### Solución
+
+**a)** Lineal, no invariante (ver problema 3, apartado b).
+
+**b)** Lineal: $\big[a x_1(t) + b x_2(t)\big]\cos(2\pi f_0 t) = a y_1(t) + b y_2(t)$. Sí.
+Invariante: $y_1(t) = x(t - t_0)\cos(2\pi f_0 t)$, pero $y(t - t_0) = x(t - t_0)\cos\big(2\pi f_0 (t - t_0)\big)$. No.
+
+**c)** Lineal: sí (combinación lineal de muestras de la entrada).
+Invariante: $y_1[n] = x[n - n_0] - x[n - n_0 - 1] = y[n - n_0]$. Sí. Es LTI.
+
+**d)** Lineal: la integral es un operador lineal. Sí.
+Invariante: con $x_1(t) = x(t - t_0)$ y el cambio $\sigma = \tau - t_0$,
+
+$$
+y_1(t) = \int_{-\infty}^{t} x(\tau - t_0)\,d\tau = \int_{-\infty}^{t - t_0} x(\sigma)\,d\sigma = y(t - t_0)
+$$
+
+Sí. Es LTI.
+
+**e)** Lineal, no invariante (ver problema 3, apartado c).
+
+| Sistema | L | IVT |
+|:---|:---:|:---:|
+| $n\,x[n]$ | Sí | No |
+| $x(t)\cos(2\pi f_0 t)$ | Sí | No |
+| $x[n] - x[n-1]$ | Sí | Sí |
+| $\int_{-\infty}^{t} x(\tau)\,d\tau$ | Sí | Sí |
+| $x[n^2]$ | Sí | No |
+
+---
+
+## Problema 5
+
+Determina si los siguientes sistemas son LTI: a) $y(t) = x^2(t^2)$; b) $y(n) = x(n) + x(n - L)$ con $L$ entero; c) $y(n) = \dfrac{x(n)}{x(n-1)}$.
+
+### Solución
+
+**a)** Linealidad: $\big[a x_1(t^2) + b x_2(t^2)\big]^2 \neq a\,x_1^2(t^2) + b\,x_2^2(t^2)$. No es lineal.
+Invarianza: con $x_1(t) = x(t - t_0)$,
+
+$$
+y_1(t) = x_1^2(t^2) = x^2(t^2 - t_0)
+\qquad\text{pero}\qquad
+y(t - t_0) = x^2\big((t - t_0)^2\big)
+$$
+
+No es invariante. **No es LTI.**
+
+**b)** Linealidad: $a\big[x_1(n) + x_1(n-L)\big] + b\big[x_2(n) + x_2(n-L)\big]$. Sí.
+Invarianza: $y_1(n) = x(n - n_0) + x(n - n_0 - L) = y(n - n_0)$. Sí.
+**Es LTI**, con respuesta al impulso $h(n) = \delta(n) + \delta(n - L)$.
+
+**c)** Linealidad: con $a\,x(n)$, la salida es $\dfrac{a\,x(n)}{a\,x(n-1)} = y(n) \neq a\,y(n)$. No es lineal.
+Invarianza: $y_1(n) = \dfrac{x(n - n_0)}{x(n - n_0 - 1)} = y(n - n_0)$. Sí.
+**No es LTI.**
+
+---
+
+# Señales
+
+## Problema 6
+
+Determina el periodo de las siguientes señales sinusoidales continuas ($t$ en s):
+
+a) $y(t) = 5\cos\!\left(20\pi t - \dfrac{\pi}{10}\right)$
+
+b) $y(t) = 7\cos\!\left(150\pi t + \dfrac{\pi}{4}\right) + 15\cos\!\left(300\pi t + \dfrac{\pi}{2}\right)$
+
+### Solución
+
+**a)** $\omega_0 = 20\pi \;\Rightarrow\; T = \dfrac{2\pi}{20\pi} = 0.1\,\text{s}$. La fase no influye en el periodo.
+
+**b)** Frecuencias: $f_1 = 75\,\text{Hz}$ ($T_1 = 1/75\,\text{s}$) y $f_2 = 150\,\text{Hz}$ ($T_2 = 1/150\,\text{s}$). El cociente $T_1/T_2 = 2$ es racional, así que la suma es periódica. La frecuencia fundamental es el máximo común divisor, $f_0 = \text{mcd}(75, 150) = 75\,\text{Hz}$:
+
+$$
+T = \text{mcm}(T_1, T_2) = \frac{1}{75}\,\text{s} \approx 13.3\,\text{ms}
+$$
+
+---
+
+## Problema 7
+
+Clasifica las siguientes señales como **par, impar o ninguna**:
+
+a) $x_1[n] = u[n] - u[n-5]$  
+b) $x_2[n] = n^2$  
+c) $x_3[n] = \cos(0.3\pi n)$  
+d) $x_4[n] = n\cdot u[n]$
+
+### Solución
+
+**a)** $x_1[n] = 1$ para $0 \leq n \leq 4$ y $0$ en el resto. $x_1[-1] = 0 \neq x_1[1] = 1$, luego no es par; $x_1[0] = 1 \neq 0$, luego no es impar. **Ninguna.**
+
+**b)** $x_2[-n] = (-n)^2 = n^2 = x_2[n]$. **Par.**
+
+**c)** $x_3[-n] = \cos(-0.3\pi n) = \cos(0.3\pi n) = x_3[n]$. **Par.**
+
+**d)** $x_4[1] = 1$ y $x_4[-1] = 0$: no se cumple ni $x_4[-1] = x_4[1]$ ni $x_4[-1] = -x_4[1]$. **Ninguna.**
+
+---
+
+## Problema 8
+
+Determina si las siguientes señales tienen simetría par o impar (o ninguna de las dos):
+
+a) $y(t) = \dfrac{1}{2}\,e^{-|t|}$
+
+b) $x(n) = 3\,\delta(n) + \dfrac{1}{2}\big[u(n) + u(-n)\big]$
+
+c) $y(t) = \dfrac{1}{2}\displaystyle\sum_{k=0}^{10} e^{-10kt}\cdot u(t)$
+
+### Solución
+
+**a)** $y(-t) = \tfrac{1}{2}e^{-|-t|} = \tfrac{1}{2}e^{-|t|} = y(t)$. **Par.**
+
+**b)** $u(n) + u(-n)$ vale $1$ para todo $n \neq 0$ y $2$ en $n = 0$, es decir, $u(n) + u(-n) = 1 + \delta(n)$. Por tanto:
+
+$$
+x(n) = 3\,\delta(n) + \frac{1}{2}\big[1 + \delta(n)\big] = \frac{1}{2} + \frac{7}{2}\,\delta(n)
+$$
+
+Como $\delta(-n) = \delta(n)$, se cumple $x(-n) = x(n)$. **Par.**
+
+**c)** Por el factor $u(t)$, $y(t) = 0$ para $t < 0$, mientras que para $t > 0$ el término $k = 0$ ya aporta $\tfrac{1}{2}$, así que $y(t) > 0$. Por ejemplo, $y(-1) = 0 \neq \pm\,y(1)$. **Ninguna.**
+
+---
+
+## Problema 9
+
+Determina cuál de las siguientes señales es (o no) par o impar:
+
+a) $y(t) = 0.5\cdot\big[u(t) + u(-t)\big]$
+
+b) $y(n) = u(n-3) + u(3-n)$
+
+c) $y(n) = 5\cdot\big[e^{2n} - e^{-2n}\big]$
+
+### Solución
+
+**a)** $y(-t) = 0.5\big[u(-t) + u(t)\big] = y(t)$. **Par.** (De hecho, $y(t) = 0.5$ para todo $t \neq 0$.)
+
+**b)** $u(n-3) = 1$ para $n \geq 3$ y $u(3-n) = 1$ para $n \leq 3$. Ambas se solapan solo en $n = 3$:
+
+$$
+y(n) = 1 + \delta(n - 3)
+$$
+
+Así, $y(3) = 2$ pero $y(-3) = 1$: no es par ni impar. **Ninguna.** (Aunque la expresión recuerde a la forma $g(n) + g(-n)$, los desplazamientos no son simétricos respecto al origen.)
+
+**c)** $y(-n) = 5\big[e^{-2n} - e^{2n}\big] = -y(n)$. **Impar.** (Es $y(n) = 10\sinh(2n)$.)
+
+---
+
+## Problema 10
+
+Determina si cada una de las siguientes señales es periódica o no. Si es periódica, determina su periodo fundamental.
+
+a) $x(t) = \cos\!\left(t + \dfrac{\pi}{4}\right)$  
+b) $x(t) = \sin\dfrac{2\pi}{3}t$  
+c) $x(t) = \cos\dfrac{\pi}{3}t + \sin\dfrac{\pi}{4}t$  
+d) $x(t) = \cos t + \sin\sqrt{2}\,t$  
+e) $x(t) = \sin^2 t$  
+f) $x(t) = e^{j[(\pi/2)t - 1]}$
+
+### Solución
+
+**a)** $\omega_0 = 1 \;\Rightarrow\;$ periódica, $T = 2\pi$.
+
+**b)** $\omega_0 = \dfrac{2\pi}{3} \;\Rightarrow\;$ periódica, $T = \dfrac{2\pi}{2\pi/3} = 3$.
+
+**c)** $T_1 = \dfrac{2\pi}{\pi/3} = 6$ y $T_2 = \dfrac{2\pi}{\pi/4} = 8$. Como $T_1/T_2 = 3/4$ es racional, es periódica con
+
+$$
+T = \text{mcm}(6, 8) = 24
+$$
+
+**d)** $T_1 = 2\pi$ y $T_2 = \dfrac{2\pi}{\sqrt{2}} = \sqrt{2}\,\pi$. El cociente $T_1/T_2 = \sqrt{2}$ es irracional. **No es periódica.**
+
+**e)** $\sin^2 t = \dfrac{1 - \cos 2t}{2} \;\Rightarrow\;$ periódica, $T = \dfrac{2\pi}{2} = \pi$.
+
+**f)** $x(t) = e^{-j}\,e^{j\frac{\pi}{2}t}$, con $\omega_0 = \dfrac{\pi}{2} \;\Rightarrow\;$ periódica, $T = \dfrac{2\pi}{\pi/2} = 4$.
+
+---
+
+## Problema 11
+
+La señal continua $x(t) = 10\cos(150\pi t)$, con $t$ en segundos, se muestrea con un periodo de muestreo $T$ obteniendo la señal discreta $x(n) = 10\cos\!\left(\dfrac{\pi n}{2}\right)$. Determina el periodo de muestreo $T$. ¿Es único?
+
+### Solución
+
+Al muestrear:
+
+$$
+x(nT) = 10\cos(150\pi T\, n)
+$$
+
+Para que coincida con $10\cos(\pi n / 2)$ en todo $n$, las frecuencias digitales deben ser iguales salvo múltiplos de $2\pi$ y salvo el signo (el coseno es par):
+
+$$
+150\pi T = \pm\frac{\pi}{2} + 2\pi k
+\;\Rightarrow\;
+T = \frac{4k \pm 1}{300}, \quad k \in \mathbb{Z}
+$$
+
+Los valores positivos de $4k \pm 1$ son todos los impares, así que
+
+$$
+T = \frac{2m + 1}{300}\,\text{s}, \qquad m = 0, 1, 2, \ldots
+$$
+
+es decir, $T = \dfrac{1}{300}\,\text{s},\ \dfrac{1}{100}\,\text{s},\ \dfrac{1}{60}\,\text{s},\ \dfrac{7}{300}\,\text{s}, \ldots$
+
+**No es único.** Solo $T = 1/300\,\text{s}$ ($f_s = 300\,\text{Hz} > 2\cdot 75\,\text{Hz}$) cumple el criterio de Nyquist; el resto produce aliasing. Por ejemplo, con $T = 1/100\,\text{s}$ la componente de $75\,\text{Hz}$ aparece en $75 - 100 = -25\,\text{Hz}$, que da la misma frecuencia digital $2\pi \cdot 25/100 = \pi/2$.
+
+---
+
+## Problema 12
+
+Determina, de manera gráfica, las señales que se obtienen tras aplicar las siguientes operaciones: a) $y(t) = 2x(t+2)$; b) $y(t) = x(-t) + 1$; c) $y(t) = 3x(t/2)$; d) $y(t) = x(3t)$.
+
+```{.tikz}
+\begin{tikzpicture}[x=1cm,y=1cm]
+\draw[ax] (-3.3,0)--(3.5,0) node[right]{$t$};
+\draw[ax] (0,-1.5)--(0,1.6) node[above]{$x(t)$};
+\draw (-2,0.05)--(-2,-0.05); \node[above] at (-2,0) {\scriptsize $-2$};
+\draw (2,0.05)--(2,-0.05); \node[below] at (2,0) {\scriptsize $2$};
+\node[left] at (0,1) {\scriptsize $1$};
+\node[right] at (0,-1) {\scriptsize $-1$};
+\draw[sig] (-3.2,0)--(-2,0)--(-2,-1)--(0,-1)--(0,1)--(2,1)--(2,0)--(3.2,0);
+\end{tikzpicture}
+```
+
+### Solución
+
+La señal original es $x(t) = -1$ para $-2 < t < 0$, $x(t) = 1$ para $0 < t < 2$ y $0$ en el resto.
+
+**a)** $y(t) = 2x(t + 2)$: se adelanta la señal 2 unidades (desplazamiento a la izquierda) y se multiplica la amplitud por 2. Vale $-2$ en $(-4, -2)$ y $2$ en $(-2, 0)$.
+
+**b)** $y(t) = x(-t) + 1$: se refleja respecto al eje vertical, $x(-t) = 1$ en $(-2, 0)$ y $-1$ en $(0, 2)$, y se suma 1. Vale $2$ en $(-2, 0)$, $0$ en $(0, 2)$ y $1$ para $|t| > 2$.
+
+**c)** $y(t) = 3x(t/2)$: se expande en el tiempo un factor 2 y se multiplica la amplitud por 3. Vale $-3$ en $(-4, 0)$ y $3$ en $(0, 4)$.
+
+**d)** $y(t) = x(3t)$: se comprime en el tiempo un factor 3. Vale $-1$ en $(-2/3, 0)$ y $1$ en $(0, 2/3)$.
+
+::: {layout-ncol=2}
+
+```{.tikz}
+\begin{tikzpicture}[x=0.75cm,y=0.6cm]
+\draw[ax] (-5.3,0)--(1.5,0) node[right]{$t$};
+\draw[ax] (0,-2.6)--(0,2.7) node[above]{$y(t)$};
+\draw (-4,0.08)--(-4,-0.08); \node[above] at (-4,0) {\scriptsize $-4$};
+\draw (-2,0.08)--(-2,-0.08); \node[below right] at (-2,0) {\scriptsize $-2$};
+\draw[gd] (-2,-2)--(0,-2);
+\node[right] at (0,2) {\scriptsize $2$};
+\node[right] at (0,-2) {\scriptsize $-2$};
+\draw[sig] (-5.2,0)--(-4,0)--(-4,-2)--(-2,-2)--(-2,2)--(0,2)--(0,0)--(1.2,0);
+\node[tit, anchor=south] at ([yshift=3pt]current bounding box.north) {a) $y(t)=2x(t+2)$};
+\end{tikzpicture}
+```
+
+```{.tikz}
+\begin{tikzpicture}[x=0.75cm,y=0.6cm]
+\draw[ax] (-3.3,0)--(3.5,0) node[right]{$t$};
+\draw[ax] (0,-0.6)--(0,2.7) node[above]{$y(t)$};
+\draw (-2,0.08)--(-2,-0.08) node[below]{\scriptsize $-2$};
+\draw (2,0.08)--(2,-0.08) node[below]{\scriptsize $2$};
+\draw[gd] (0,1)--(2,1);
+\node[right] at (0,2) {\scriptsize $2$};
+\node[above left] at (0,1) {\scriptsize $1$};
+\draw[sig] (-3.2,1)--(-2,1)--(-2,2)--(0,2)--(0,0)--(2,0)--(2,1)--(3.2,1);
+\node[tit, anchor=south] at ([yshift=3pt]current bounding box.north) {b) $y(t)=x(-t)+1$};
+\end{tikzpicture}
+```
+
+```{.tikz}
+\begin{tikzpicture}[x=0.6cm,y=0.45cm]
+\draw[ax] (-5.3,0)--(5.5,0) node[right]{$t$};
+\draw[ax] (0,-3.6)--(0,3.7) node[above]{$y(t)$};
+\draw (-4,0.1)--(-4,-0.1); \node[above] at (-4,0) {\scriptsize $-4$};
+\draw (4,0.1)--(4,-0.1); \node[below] at (4,0) {\scriptsize $4$};
+\node[left] at (0,3) {\scriptsize $3$};
+\node[right] at (0,-3) {\scriptsize $-3$};
+\draw[sig] (-5.2,0)--(-4,0)--(-4,-3)--(0,-3)--(0,3)--(4,3)--(4,0)--(5.2,0);
+\node[tit, anchor=south] at ([yshift=3pt]current bounding box.north) {c) $y(t)=3x(t/2)$};
+\end{tikzpicture}
+```
+
+```{.tikz}
+\begin{tikzpicture}[x=2.2cm,y=1cm]
+\draw[ax] (-1.2,0)--(1.3,0) node[right]{$t$};
+\draw[ax] (0,-1.5)--(0,1.6) node[above]{$y(t)$};
+\draw (-0.6667,0.05)--(-0.6667,-0.05); \node[above] at (-0.6667,0) {\scriptsize $-\frac{2}{3}$};
+\draw (0.6667,0.05)--(0.6667,-0.05); \node[below] at (0.6667,0) {\scriptsize $\frac{2}{3}$};
+\node[left] at (0,1) {\scriptsize $1$};
+\node[right] at (0,-1) {\scriptsize $-1$};
+\draw[sig] (-1.1,0)--(-0.6667,0)--(-0.6667,-1)--(0,-1)--(0,1)--(0.6667,1)--(0.6667,0)--(1.1,0);
+\node[tit, anchor=south] at ([yshift=3pt]current bounding box.north) {d) $y(t)=x(3t)$};
+\end{tikzpicture}
+```
+
+:::
+
+---
+
+## Problema 13
+
+Determina, de manera gráfica, las señales que se obtienen tras aplicar las siguientes operaciones: a) $y(t) = x(-t+2) + 1$; b) $y(t) = -x(-t)$; c) $y(t) = 3x(2t) + 1$; d) $y(t) = x(-t/2)$.
+
+```{.tikz}
+\begin{tikzpicture}[x=1cm,y=1.2cm]
+\draw[ax] (-1.3,0)--(4.5,0) node[right]{$t$};
+\draw[ax] (0,-0.3)--(0,1.6) node[above]{$x(t)$};
+\foreach \x in {1,2,3} \draw (\x,0.05)--(\x,-0.05) node[below]{\scriptsize $\x$};
+\node[below left] at (0,0) {\scriptsize $0$};
+\draw[gd] (0,1) node[left]{\scriptsize $1$} -- (1,1);
+\draw[gd] (1,0)--(1,1) (2,0)--(2,1);
+\draw[sig] (-1.2,0)--(0,0)--(1,1)--(2,1)--(3,0)--(4.2,0);
+\end{tikzpicture}
+```
+
+### Solución
+
+La señal original es un trapecio: $x(t) = t$ en $[0, 1]$, $x(t) = 1$ en $[1, 2]$, $x(t) = 3 - t$ en $[2, 3]$ y $0$ en el resto. Un método sistemático es transformar sus puntos de ruptura: si la operación es $x(\alpha t + \beta)$, el punto $s$ del eje original pasa a $t = (s - \beta)/\alpha$.
+
+**a)** $y(t) = x(-t + 2) + 1$. Con $s = 2 - t$: $s = 0, 1, 2, 3 \mapsto t = 2, 1, 0, -1$. El trapecio queda reflejado y apoyado en $[-1, 2]$, y después se eleva 1 unidad: vale $1$ fuera de $[-1, 2]$, sube de $1$ a $2$ en $[-1, 0]$, vale $2$ en $[0, 1]$ y baja a $1$ en $[1, 2]$.
+
+**b)** $y(t) = -x(-t)$. Con $s = -t$: $s = 0, 1, 2, 3 \mapsto t = 0, -1, -2, -3$. Se refleja respecto al eje vertical y se invierte el signo: baja de $0$ a $-1$ en $[-3, -2]$, vale $-1$ en $[-2, -1]$ y vuelve a $0$ en $[-1, 0]$.
+
+**c)** $y(t) = 3x(2t) + 1$. Con $s = 2t$: $s = 0, 1, 2, 3 \mapsto t = 0, \tfrac{1}{2}, 1, \tfrac{3}{2}$. Se comprime un factor 2, se multiplica por 3 y se eleva 1: vale $1$ fuera de $[0, 1.5]$, sube de $1$ a $4$ en $[0, 0.5]$, vale $4$ en $[0.5, 1]$ y baja a $1$ en $[1, 1.5]$.
+
+**d)** $y(t) = x(-t/2)$. Con $s = -t/2$: $s = 0, 1, 2, 3 \mapsto t = 0, -2, -4, -6$. Se refleja y se expande un factor 2: sube de $0$ a $1$ en $[-6, -4]$, vale $1$ en $[-4, -2]$ y baja a $0$ en $[-2, 0]$.
+
+::: {layout-ncol=2}
+
+```{.tikz}
+\begin{tikzpicture}[x=0.9cm,y=0.9cm]
+\draw[ax] (-2.3,0)--(3.5,0) node[right]{$t$};
+\draw[ax] (0,-0.4)--(0,2.6) node[above]{$y(t)$};
+\foreach \x in {-1,1,2} \draw (\x,0.05)--(\x,-0.05) node[below]{\scriptsize $\x$};
+\node[below left] at (0,0) {\scriptsize $0$};
+\draw[gd] (-1,0)--(-1,1) (1,0)--(1,2) (2,0)--(2,1);
+\node[above left] at (0,2) {\scriptsize $2$};
+\node[below right] at (0,1) {\scriptsize $1$};
+\draw[gd] (0,1)--(1.5,1);
+\draw[sig] (-2.2,1)--(-1,1)--(0,2)--(1,2)--(2,1)--(3.2,1);
+\node[tit, anchor=south] at ([yshift=3pt]current bounding box.north) {a) $y(t)=x(-t+2)+1$};
+\end{tikzpicture}
+```
+
+```{.tikz}
+\begin{tikzpicture}[x=0.9cm,y=0.9cm]
+\draw[ax] (-4.3,0)--(1.5,0) node[right]{$t$};
+\draw[ax] (0,-1.5)--(0,0.8) node[above]{$y(t)$};
+\foreach \x in {-3,-2,-1} \draw (\x,0.05)--(\x,-0.05) node[above]{\scriptsize $\x$};
+\draw[gd] (-2,0)--(-2,-1) (-1,0)--(-1,-1) (-1,-1)--(0,-1);
+\node[right] at (0,-1) {\scriptsize $-1$};
+\draw[sig] (-4.2,0)--(-3,0)--(-2,-1)--(-1,-1)--(0,0)--(1.2,0);
+\node[tit, anchor=south] at ([yshift=3pt]current bounding box.north) {b) $y(t)=-x(-t)$};
+\end{tikzpicture}
+```
+
+```{.tikz}
+\begin{tikzpicture}[x=1.6cm,y=0.5cm]
+\draw[ax] (-1.1,0)--(2.5,0) node[right]{$t$};
+\draw[ax] (0,-0.7)--(0,4.7) node[above]{$y(t)$};
+\draw (0.5,0.1)--(0.5,-0.1) node[below]{\scriptsize $0.5$};
+\draw (1,0.1)--(1,-0.1) node[below]{\scriptsize $1$};
+\draw (1.5,0.1)--(1.5,-0.1) node[below]{\scriptsize $1.5$};
+\node[below left] at (0,0) {\scriptsize $0$};
+\draw[gd] (0.5,0)--(0.5,4) (1,0)--(1,4) (0,4)--(0.5,4) (1.5,0)--(1.5,1);
+\node[left] at (0,4) {\scriptsize $4$};
+\node[above left] at (0,1) {\scriptsize $1$};
+\draw[sig] (-1,1)--(0,1)--(0.5,4)--(1,4)--(1.5,1)--(2.3,1);
+\node[tit, anchor=south] at ([yshift=3pt]current bounding box.north) {c) $y(t)=3x(2t)+1$};
+\end{tikzpicture}
+```
+
+```{.tikz}
+\begin{tikzpicture}[x=0.6cm,y=1.2cm]
+\draw[ax] (-7.5,0)--(1.5,0) node[right]{$t$};
+\draw[ax] (0,-0.3)--(0,1.5) node[above]{$y(t)$};
+\foreach \x in {-6,-4,-2} \draw (\x,0.05)--(\x,-0.05) node[below]{\scriptsize $\x$};
+\node[below right] at (0,0) {\scriptsize $0$};
+\draw[gd] (-4,0)--(-4,1) (-2,0)--(-2,1) (-2,1)--(0,1);
+\node[right] at (0,1) {\scriptsize $1$};
+\draw[sig] (-7.3,0)--(-6,0)--(-4,1)--(-2,1)--(0,0)--(1.2,0);
+\node[tit, anchor=south] at ([yshift=3pt]current bounding box.north) {d) $y(t)=x(-t/2)$};
+\end{tikzpicture}
+```
+
+:::
+
+---
+
+# Energía y potencia
+
+## Problema 14
+
+Calcula la energía de la señal $x[n] = 3\cdot(0.5)^n\cdot u[n]$.
+
+### Solución
+
+$$
+E = \sum_{n=0}^{\infty} \big|3\,(0.5)^n\big|^2 = 9\sum_{n=0}^{\infty} (0.25)^n = \frac{9}{1 - 0.25} = 12
+$$
+
+Es una señal de energía ($E = 12$, $P = 0$).
+
+---
+
+## Problema 15
+
+Calcula la potencia media de las siguientes señales:
+
+a) $x[n] = 4\cos(0.2\pi n)$  
+b) $x[n] = 2e^{j0.5\pi n}$  
+c) $x[n] = 3u[n]$
+
+### Solución
+
+**a)** Es periódica con $N_0 = \dfrac{2\pi}{0.2\pi} = 10$, así que basta promediar en un periodo:
+
+$$
+P = \frac{1}{10}\sum_{n=0}^{9} 16\cos^2(0.2\pi n)
+= \frac{16}{10}\sum_{n=0}^{9} \frac{1 + \cos(0.4\pi n)}{2}
+= \frac{16}{10}\cdot 5 = 8
+$$
+
+(la suma de $\cos(0.4\pi n)$ en un periodo completo es nula). Coincide con $A^2/2$.
+
+**b)** $|x[n]|^2 = |2|^2\,|e^{j0.5\pi n}|^2 = 4$ para todo $n$, luego $P = 4$.
+
+**c)**
+
+$$
+P = \lim_{N\to\infty} \frac{1}{2N+1}\sum_{n=0}^{N} 9 = \lim_{N\to\infty} \frac{9(N+1)}{2N+1} = \frac{9}{2} = 4.5
+$$
+
+---
+
+## Problema 16
+
+Determina si las siguientes señales son de energía, de potencia o de ninguno de los dos tipos:
+
+a) $x(t) = e^{-at}u(t)$, $a > 0$  
+b) $x(t) = A\cos(\omega_0 t + \theta)$  
+c) $x(t) = t\,u(t)$
+
+### Solución
+
+**a)**
+
+$$
+E = \int_0^{\infty} e^{-2at}\,dt = \frac{1}{2a} < \infty
+$$
+
+**Señal de energía** ($P = 0$).
+
+**b)** $E = \infty$ (no decae). Potencia, para $\omega_0 \neq 0$:
+
+$$
+P = \lim_{T\to\infty} \frac{1}{2T}\int_{-T}^{T} A^2\cos^2(\omega_0 t + \theta)\,dt
+= \lim_{T\to\infty} \frac{A^2}{2T}\int_{-T}^{T} \frac{1 + \cos(2\omega_0 t + 2\theta)}{2}\,dt
+= \frac{A^2}{2}
+$$
+
+**Señal de potencia.**
+
+**c)** $E = \displaystyle\int_0^{\infty} t^2\,dt = \infty$ y
+
+$$
+P = \lim_{T\to\infty} \frac{1}{2T}\int_0^{T} t^2\,dt = \lim_{T\to\infty} \frac{T^2}{6} = \infty
+$$
+
+**Ninguna de las dos.**
+
+---
+
+## Problema 17
+
+Determina la energía y la potencia de: a) $y(n) = u(n) - u(n-L)$ siendo $L$ un número entero positivo; b) $x(t) = 10\cdot e^{5t}\cdot u(t)$; c) $x(n) = j\cdot e^{5jn}\cdot u(-n)$.
+
+### Solución
+
+**a)** $y(n) = 1$ para $0 \leq n \leq L-1$ y $0$ en el resto ($L$ muestras):
+
+$$
+E = \sum_{n=0}^{L-1} 1 = L
+\qquad
+P = 0
+$$
+
+Señal de energía.
+
+**b)** La señal crece exponencialmente:
+
+$$
+E = \int_0^{\infty} 100\,e^{10t}\,dt = \infty
+\qquad
+P = \lim_{T\to\infty} \frac{1}{2T}\int_0^{T} 100\,e^{10t}\,dt = \lim_{T\to\infty} \frac{10\,(e^{10T} - 1)}{2T} = \infty
+$$
+
+Ni de energía ni de potencia.
+
+**c)** $|x(n)|^2 = |j|^2\,|e^{5jn}|^2 = 1$ para $n \leq 0$ y $0$ para $n > 0$:
+
+$$
+E = \sum_{n=-\infty}^{0} 1 = \infty
+\qquad
+P = \lim_{N\to\infty} \frac{1}{2N+1}\sum_{n=-N}^{0} 1 = \lim_{N\to\infty} \frac{N+1}{2N+1} = \frac{1}{2}
+$$
+
+Señal de potencia.
+
+---
+
+## Problema 18
+
+Determina la energía de la señal continua definida como
+
+$$
+x(t) =
+\begin{cases}
+\dfrac{1}{2}\,\big[9 - t^2\big] & -3 \leq t \leq 3 \\[2mm]
+0 & |t| > 3
+\end{cases}
+$$
+
+¿Cuánto vale su potencia?
+
+### Solución
+
+Como el integrando es par, se integra en $[0, 3]$ y se multiplica por 2:
+
+$$
+E = \int_{-3}^{3} \frac{1}{4}\big(9 - t^2\big)^2\,dt
+= \frac{1}{2}\int_0^{3} \big(81 - 18t^2 + t^4\big)\,dt
+= \frac{1}{2}\left[81t - 6t^3 + \frac{t^5}{5}\right]_0^3
+$$
+
+$$
+E = \frac{1}{2}\left(243 - 162 + \frac{243}{5}\right) = \frac{1}{2}\cdot\frac{648}{5} = \frac{324}{5} = 64.8
+$$
+
+Al tener energía finita, su potencia es $P = 0$.
+
+---
+
+## Problema 19
+
+Determina la energía y la potencia de las siguientes señales:
+
+a) $x(t) = \big[10\cdot e^{-3t} + 5\cdot e^{-5t}\big]\cdot u(t)$
+
+b) $x(n) = \dfrac{1}{2}\cdot\big[u(n-3) + u(-n)\big]$
+
+c) $x(t) = \dfrac{1}{2}\cdot e^{j\left(wt + 2wt^2 + 3wt^3\right)}$
+
+### Solución
+
+**a)** Desarrollando el cuadrado (incluido el término cruzado):
+
+$$
+|x(t)|^2 = \big(100\,e^{-6t} + 100\,e^{-8t} + 25\,e^{-10t}\big)\,u(t)
+$$
+
+$$
+E = \frac{100}{6} + \frac{100}{8} + \frac{25}{10} = \frac{50}{3} + \frac{25}{2} + \frac{5}{2} = \frac{95}{3} \approx 31.67
+\qquad
+P = 0
+$$
+
+Señal de energía.
+
+**b)** $u(-n) = 1$ para $n \leq 0$ y $u(n-3) = 1$ para $n \geq 3$; no se solapan. Por tanto, $x(n) = \tfrac{1}{2}$ para $n \leq 0$ y para $n \geq 3$, y $x(1) = x(2) = 0$. Como $|x(n)|^2 = \tfrac{1}{4}$ en infinitas muestras, $E = \infty$. En $[-N, N]$ hay $N + 1$ muestras con $n \leq 0$ y $N - 2$ con $n \geq 3$:
+
+$$
+P = \lim_{N\to\infty} \frac{1}{2N+1}\cdot\frac{1}{4}\big[(N+1) + (N-2)\big]
+= \lim_{N\to\infty} \frac{1}{4}\cdot\frac{2N-1}{2N+1} = \frac{1}{4}
+$$
+
+Señal de potencia.
+
+**c)** Con $w$ real, el exponente es imaginario puro, así que $|x(t)|^2 = \tfrac{1}{4}$ para todo $t$:
+
+$$
+E = \infty
+\qquad
+P = \lim_{T\to\infty} \frac{1}{2T}\int_{-T}^{T} \frac{1}{4}\,dt = \frac{1}{4}
+$$
+
+Señal de potencia.

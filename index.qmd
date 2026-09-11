@@ -24,6 +24,17 @@ Usa el **menú de la izquierda** para navegar entre las prácticas.
   `ode45`, respuesta natural y forzada de un circuito RC, y regímenes y
   resonancia de un RLC serie.
 
+## Problemas resueltos
+
+Colecciones de problemas con enunciado y solución, ordenados de menor a mayor
+complejidad.
+
+- [**Señales y sistemas**](problemas/senales_sistemas.qmd): operaciones con
+  señales, simetrías, energía y potencia, y muestreo.
+- [**Muestreo, cuantización y aliasing**](problemas/problemas_muestreo.qmd):
+  dimensionado de sistemas de adquisición, número de bits, error de
+  cuantización y frecuencias aparentes.
+
 ## Cómo trabajar
 
 - Trabaja siempre en **scripts** (`.m`), nunca en *Live Scripts*.

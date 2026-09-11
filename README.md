@@ -25,6 +25,8 @@ izquierdo** para navegar entre labs; cada lab se puede descargar además en **PD
   menú lateral). Los `.qmd` heredan de aquí; su cabecera es mínima (solo `title:`).
 - `index.qmd` — portada del sitio.
 - `lab0.qmd`, `lab1.qmd`, … — las prácticas.
+- `problemas/` — colecciones de problemas resueltos. Se renderizan con el
+  proyecto: `_quarto.yml` incluye `problemas/*.qmd` en la lista de `render`.
 - `callouts.lua` — filtro de callouts de ejercicio/solución (ver más abajo).
 - `tikz.lua` — filtro de circuitos CircuiTikZ (ver más abajo).
 - `CONTENIDOS.md` — mapa docente: objetivos, contenidos y ejercicios de cada
@@ -173,6 +175,15 @@ Requisitos (una sola vez, y solo para la salida HTML):
 
 ```bash
 tlmgr install circuitikz dvisvgm standalone luatex85
+```
+
+Si los diagramas de un documento necesitan definiciones propias (estilos de
+`\tikzset`, paquetes extra), se declaran en su cabecera YAML y el filtro las
+añade al preámbulo con el que compila cada bloque:
+
+```yaml
+tikz-preamble: |
+  \tikzset{sig/.style={very thick, blue!70!black}}
 ```
 
 Limitaciones conocidas:

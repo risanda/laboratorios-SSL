@@ -24,3 +24,6 @@ lab*.quarto_ipynb*
 
 # Figuras intermedias que Quarto genera al renderizar cada lab a PDF
 /lab*_files/
+
+# Ficheros intermedios de Quarto en cualquier carpeta
+**/*_files/

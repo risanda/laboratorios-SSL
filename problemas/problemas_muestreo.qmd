@@ -1,0 +1,462 @@
+---
+title: "Problemas de muestreo, cuantización y aliasing"
+subtitle: "Enunciados y soluciones (ordenados de menor a mayor complejidad)"
+lang: es
+format:
+  html:
+    toc: true
+    html-math-method: mathjax
+  pdf:
+    toc: true
+---
+
+## Fórmulas de referencia
+
+- Frecuencia de Nyquist: $f_N = 2 f_{\max}$. Para evitar aliasing: $f_s > f_N$.
+- Si la señal varía como mínimo en un tiempo $T_{\min}$: $f_{\max} = \dfrac{1}{T_{\min}}$.
+- Número de bits: $2^N \geq \dfrac{\text{rango}}{\text{precisión}}$.
+- Paso de cuantización: $Q = \dfrac{V_{FS}}{2^N}$.
+- Error de cuantización: $|\varepsilon| \leq \dfrac{Q}{2}$ si se redondea; $0 \leq \varepsilon < Q$ si se trunca.
+- Relación señal-ruido de cuantización: $SNR_Q \approx 6.02\,N + 1.76 \ \text{dB}$.
+- Bit-rate: $R_b = f_s \cdot N$.
+- Frecuencia aparente tras muestrear a $f_s$: $f_a = f - k f_s$, eligiendo $k$ entero tal que $|f_a| \leq f_s/2$. Si $f_a < 0$, un seno cambia de signo ($\sin(-x) = -\sin x$) y un coseno no.
+- Frecuencia digital: $F = f/f_s$ (ciclos/muestra). Al reconstruir con $f_r$: $f_{\text{salida}} = F \cdot f_r$.
+
+---
+
+## Problema 1
+
+Se tiene un sistema de adquisición de bioseñales que funciona con una frecuencia de muestreo de $16\,\text{kHz}$. Determina: a) qué frecuencias máximas deben tener las diferentes señales muestreadas para evitar el aliasing; b) amplitud del error de cuantización si el conversor A/D tiene como rango $-10$ a $10$ voltios y se redondea (se tiene una $SNR_Q$ de $72\,\text{dB}$).
+
+### Solución
+
+**a)** Frecuencia máxima de las señales:
+
+$$
+f_s > f_N = 2 f_{\max}
+\;\Rightarrow\;
+f_{\max} < \frac{f_s}{2} = \frac{16000}{2} = 8000\,\text{Hz}
+$$
+
+Es decir, todas las señales deben estar limitadas en banda por debajo de $8\,\text{kHz}$. La desigualdad es estricta: muestrear justo al doble de $f_{\max}$ no basta. En la práctica esto se garantiza con un filtro anti-aliasing antes del conversor.
+
+**b)** Número de bits a partir de la $SNR_Q$:
+
+$$
+6.02\,N + 1.76 = 72 \;\Rightarrow\; N = \frac{72 - 1.76}{6.02} = 11.67 \;\Rightarrow\; N = 12 \text{ bits}
+$$
+
+Paso de cuantización y error (redondeo):
+
+$$
+Q = \frac{20}{2^{12}} = 4.883\,\text{mV}
+\qquad
+|\varepsilon|_{\max} = \frac{Q}{2} = 2.44\,\text{mV}
+$$
+
+---
+
+## Problema 2
+
+Se quiere obtener un sistema de adquisición de temperaturas con una precisión de $0.001\,^\circ\text{C}$ (el sensor tiene una precisión mayor) y un rango de $-20\,^\circ\text{C}$ a $20\,^\circ\text{C}$. El tiempo de variación de estas temperaturas es, como mínimo, de $0.01\,\text{s}$. Determina: a) número de bits necesario en el conversor; b) frecuencia de muestreo si la vamos a escoger como $1.5$ veces la de Nyquist; c) si se usa un conversor bipolar de amplitud $5$ voltios, determina el error de cuantización si se trunca.
+
+### Solución
+
+**a)** Número de bits:
+
+$$
+2^N \geq \frac{20 - (-20)}{0.001} = 40000
+\;\Rightarrow\; N \geq \log_2 40000 = 15.29
+\;\Rightarrow\; N = 16 \text{ bits}
+$$
+
+Con 16 bits la resolución en temperatura es $40/2^{16} = 0.00061\,^\circ\text{C} < 0.001\,^\circ\text{C}$.
+
+**b)** Frecuencia de muestreo:
+
+$$
+f_{\max} = \frac{1}{0.01} = 100\,\text{Hz}
+\qquad
+f_N = 2 f_{\max} = 200\,\text{Hz}
+\qquad
+f_s = 1.5\, f_N = 300\,\text{Hz}
+$$
+
+**c)** Conversor bipolar de amplitud $5\,\text{V}$ $\Rightarrow$ rango $[-5, 5]\,\text{V}$, $V_{FS} = 10\,\text{V}$:
+
+$$
+Q = \frac{10}{2^{16}} = 152.6\,\mu\text{V}
+$$
+
+Al truncar, $0 \leq \varepsilon < Q$, por lo que el error máximo es
+
+$$
+\varepsilon_{\max} \approx Q = 152.6\,\mu\text{V} \quad (\equiv 0.00061\,^\circ\text{C})
+$$
+
+---
+
+## Problema 3
+
+Estamos interesados en diseñar un sistema de audio profesional (rango de la señal de entrada de $0$ a $22\,\text{kHz}$) en el que el ruido de cuantización esté, como mínimo, en los $100\,\text{dB}$. Sabiendo que el conversor tiene un rango de escala completa de $10\,\text{V}$ determina: a) frecuencia de muestreo mínima si queremos que sea el doble de la de Nyquist; b) número de bits del conversor; c) resolución del conversor; d) *bit-rate* mínima.
+
+### Solución
+
+**a)** Frecuencia de muestreo:
+
+$$
+f_N = 2 \cdot 22\,\text{kHz} = 44\,\text{kHz}
+\qquad
+f_s = 2\, f_N = 88\,\text{kHz}
+$$
+
+**b)** Número de bits:
+
+$$
+6.02\,N + 1.76 \geq 100 \;\Rightarrow\; N \geq \frac{100 - 1.76}{6.02} = 16.32 \;\Rightarrow\; N = 17 \text{ bits}
+$$
+
+**c)** Resolución:
+
+$$
+Q = \frac{10}{2^{17}} = 76.3\,\mu\text{V}
+$$
+
+**d)** Bit-rate mínima (un canal):
+
+$$
+R_b = f_s \cdot N = 88000 \cdot 17 = 1.496\,\text{Mbit/s}
+$$
+
+---
+
+## Problema 4
+
+Queremos diseñar un sistema de adquisición de señales de acelerometría que tienen variaciones de $100\,\text{ms}$ (como mínimo). El rango a medir es de $0\,\text{m/s}^2$ a $10\,\text{m/s}^2$ y se quiere tener una precisión de $0.001\,\text{m/s}^2$ (el sensor ya tiene esa precisión). Determina: a) frecuencia de corte del filtro paso-baja (filtro *antialiasing*) si queremos que esta frecuencia sea $2$ veces la de Nyquist; b) frecuencia de muestreo si queremos que sea $2.5$ veces la frecuencia de Nyquist; c) número de bits del conversor necesarios; d) bit-rate.
+
+### Solución
+
+$$
+f_{\max} = \frac{1}{0.1} = 10\,\text{Hz}
+\qquad
+f_N = 2 f_{\max} = 20\,\text{Hz}
+$$
+
+**a)** Frecuencia de corte del filtro:
+
+$$
+f_c = 2\, f_N = 40\,\text{Hz}
+$$
+
+> Nota: tomado literalmente, $f_c = 40\,\text{Hz}$ es mayor que $f_s/2 = 25\,\text{Hz}$, así que el filtro no eliminaría todo lo que puede producir aliasing. Si la intención era $f_c = 2 f_{\max} = 20\,\text{Hz}$, el diseño sí es coherente ($20 < 25\,\text{Hz}$).
+
+**b)** Frecuencia de muestreo:
+
+$$
+f_s = 2.5\, f_N = 50\,\text{Hz}
+$$
+
+**c)** Número de bits:
+
+$$
+2^N \geq \frac{10}{0.001} = 10000
+\;\Rightarrow\; N \geq \log_2 10000 = 13.29
+\;\Rightarrow\; N = 14 \text{ bits}
+$$
+
+**d)** Bit-rate:
+
+$$
+R_b = f_s \cdot N = 50 \cdot 14 = 700\,\text{bit/s}
+$$
+
+---
+
+## Problema 5
+
+Se tiene un proceso industrial en el que al medir la tensión se tiene
+
+$$
+v(t) = 10\cos(200\pi t) + 3\sin(1000\pi t) + 15\cos(350\pi t + 0.5\pi) \ \text{V}
+$$
+
+($t$ en segundos); esta señal se muestrea con un periodo de $10$ milisegundos. Determina de manera analítica qué frecuencias analógicas encontraríamos si a la señal discreta le aplicamos un conversor D/A ideal.
+
+### Solución
+
+Componentes de la señal: $100\,\text{Hz}$, $500\,\text{Hz}$ y $175\,\text{Hz}$.
+Muestreo: $T_s = 0.01\,\text{s} \Rightarrow f_s = 100\,\text{Hz}$ (hay aliasing, ya que $f_s/2 = 50\,\text{Hz}$).
+
+$$
+x[n] = v(nT_s) = 10\cos(2\pi n) + 3\sin(10\pi n) + 15\cos(3.5\pi n + 0.5\pi)
+$$
+
+Término a término:
+
+- $\cos(2\pi n) = 1 \;\Rightarrow\;$ la componente de $100\,\text{Hz}$ se convierte en continua de valor $10$.
+- $\sin(10\pi n) = 0 \;\Rightarrow\;$ la componente de $500\,\text{Hz}$ desaparece (se muestrea siempre en sus pasos por cero).
+- $3.5\pi n = 2\pi n + 1.5\pi n$ y $1.5\pi n = 2\pi n - 0.5\pi n$, luego
+
+$$
+\cos(3.5\pi n + 0.5\pi) = \cos(-0.5\pi n + 0.5\pi) = \cos(0.5\pi n - 0.5\pi)
+$$
+
+  que corresponde a $f = \dfrac{0.5\pi}{2\pi}\, f_s = 25\,\text{Hz}$ (equivalente a $175 - 2\cdot 100 = -25\,\text{Hz}$).
+
+Señal reconstruida:
+
+$$
+y(t) = 10 + 15\cos(50\pi t - 0.5\pi) = 10 + 15\sin(50\pi t)
+$$
+
+Frecuencias analógicas obtenidas: $0\,\text{Hz}$ (continua, amplitud $10$) y $25\,\text{Hz}$ (amplitud $15$).
+
+---
+
+## Problema 6
+
+Dada la señal
+
+$$
+v(t) = 4 + 2\cos^2(400\pi t) + \sin^2(100\pi t) \ \text{A}
+$$
+
+($t$ en segundos) determina la mínima frecuencia de muestreo que debería utilizarse para evitar los problemas de *aliasing*. Determina las componentes frecuenciales analógicas que obtendríamos si muestreásemos a $50\,\text{Hz}$ para, luego, aplicar un conversor D/A ideal.
+
+### Solución
+
+Usando $\cos^2 x = \dfrac{1 + \cos 2x}{2}$ y $\sin^2 x = \dfrac{1 - \cos 2x}{2}$:
+
+$$
+v(t) = 4 + \big(1 + \cos(800\pi t)\big) + \left(\tfrac{1}{2} - \tfrac{1}{2}\cos(200\pi t)\right)
+= 5.5 + \cos(800\pi t) - 0.5\cos(200\pi t)
+$$
+
+Componentes: $0\,\text{Hz}$, $100\,\text{Hz}$ y $400\,\text{Hz}$.
+
+**Frecuencia mínima de muestreo:**
+
+$$
+f_{\max} = 400\,\text{Hz} \;\Rightarrow\; f_s > 2 \cdot 400 = 800\,\text{Hz}
+$$
+
+**Muestreo a $50\,\text{Hz}$:**
+
+$$
+x[n] = 5.5 + \cos\!\left(2\pi \tfrac{400}{50} n\right) - 0.5\cos\!\left(2\pi \tfrac{100}{50} n\right)
+= 5.5 + \cos(16\pi n) - 0.5\cos(4\pi n)
+$$
+
+Como $\cos(16\pi n) = \cos(4\pi n) = 1$ (ambas frecuencias son múltiplos exactos de $f_s$):
+
+$$
+x[n] = 5.5 + 1 - 0.5 = 6
+$$
+
+Señal reconstruida: $y(t) = 6\,\text{A}$. Solo queda una componente continua ($0\,\text{Hz}$).
+
+---
+
+## Problema 7
+
+Dada la señal
+
+$$
+v(t) = 10\cos(500\pi t)\cdot\cos(400\pi t) \ \text{V}
+$$
+
+($t$ en s) determina la mínima frecuencia de muestreo que debería utilizarse para evitar los problemas de *aliasing*. Determina las componentes frecuenciales analógicas que obtendríamos si muestreásemos a $100\,\text{Hz}$ para, luego, aplicar un conversor D/A ideal.
+
+### Solución
+
+Usando $\cos A \cos B = \tfrac{1}{2}\big[\cos(A+B) + \cos(A-B)\big]$:
+
+$$
+v(t) = 5\cos(900\pi t) + 5\cos(100\pi t)
+$$
+
+Componentes: $450\,\text{Hz}$ y $50\,\text{Hz}$.
+
+**Frecuencia mínima de muestreo:**
+
+$$
+f_s > 2 \cdot 450 = 900\,\text{Hz}
+$$
+
+**Muestreo a $100\,\text{Hz}$:**
+
+$$
+x[n] = 5\cos(9\pi n) + 5\cos(\pi n)
+$$
+
+Como $9\pi n = 8\pi n + \pi n$, se tiene $\cos(9\pi n) = \cos(\pi n) = (-1)^n$. Ambas componentes caen en la misma frecuencia ($450 - 4\cdot 100 = 50\,\text{Hz}$):
+
+$$
+x[n] = 10\cos(\pi n)
+$$
+
+Señal reconstruida:
+
+$$
+y(t) = 10\cos(100\pi t)
+$$
+
+Se obtiene una única componente de $50\,\text{Hz}$ con amplitud $10$. Observa que $50\,\text{Hz} = f_s/2$: al ser un coseno se recupera; si fuera un seno, sus muestras serían nulas.
+
+---
+
+## Problema 8
+
+Dada la señal
+
+$$
+v(t) = 10\cos^3(100\pi t) \ \text{V}
+$$
+
+($t$ en s) determina la mínima frecuencia de muestreo que debería utilizarse para evitar los problemas de *aliasing*. Determina las componentes frecuenciales analógicas que obtendríamos si muestreásemos a $200\,\text{Hz}$ para, luego, aplicar un conversor D/A ideal.
+
+### Solución
+
+Usando $\cos^3 x = \dfrac{3\cos x + \cos 3x}{4}$:
+
+$$
+v(t) = 7.5\cos(100\pi t) + 2.5\cos(300\pi t)
+$$
+
+Componentes: $50\,\text{Hz}$ y $150\,\text{Hz}$.
+
+**Frecuencia mínima de muestreo:**
+
+$$
+f_s > 2 \cdot 150 = 300\,\text{Hz}
+$$
+
+**Muestreo a $200\,\text{Hz}$** ($f_s/2 = 100\,\text{Hz}$):
+
+$$
+x[n] = 7.5\cos(0.5\pi n) + 2.5\cos(1.5\pi n)
+$$
+
+Como $1.5\pi n = 2\pi n - 0.5\pi n$, se tiene $\cos(1.5\pi n) = \cos(0.5\pi n)$ (la componente de $150\,\text{Hz}$ aparece en $150 - 200 = -50\,\text{Hz}$):
+
+$$
+x[n] = 10\cos(0.5\pi n)
+$$
+
+Señal reconstruida:
+
+$$
+y(t) = 10\cos(100\pi t)
+$$
+
+Se obtiene una única componente de $50\,\text{Hz}$ con amplitud $10$.
+
+---
+
+## Problema 9
+
+Dada la señal
+
+$$
+v(t) = 4 + 10\cos(200\pi t)\cdot\sin(1000\pi t) + 5\sin(1000\pi t) \ \text{V}
+$$
+
+($t$ en segundos) determina la mínima frecuencia de muestreo que debería utilizarse para evitar los problemas de *aliasing*. Determina las componentes frecuenciales analógicas que obtendríamos si muestreásemos a $750\,\text{Hz}$ para, luego, aplicar un conversor D/A ideal.
+
+### Solución
+
+Usando $\sin A \cos B = \tfrac{1}{2}\big[\sin(A+B) + \sin(A-B)\big]$ con $A = 1000\pi t$, $B = 200\pi t$:
+
+$$
+10\cos(200\pi t)\sin(1000\pi t) = 5\sin(1200\pi t) + 5\sin(800\pi t)
+$$
+
+$$
+v(t) = 4 + 5\sin(800\pi t) + 5\sin(1000\pi t) + 5\sin(1200\pi t)
+$$
+
+Componentes: $0$, $400$, $500$ y $600\,\text{Hz}$.
+
+**Frecuencia mínima de muestreo:**
+
+$$
+f_s > 2 \cdot 600 = 1200\,\text{Hz}
+$$
+
+(Debe ser estrictamente mayor: con $f_s = 1200\,\text{Hz}$ el seno de $600\,\text{Hz}$ se muestrearía en sus pasos por cero y desaparecería.)
+
+**Muestreo a $750\,\text{Hz}$** ($f_s/2 = 375\,\text{Hz}$): todas las componentes no nulas están por encima de $375\,\text{Hz}$ y se repliegan con $k = 1$:
+
+| $f$ (Hz) | $f_a = f - 750$ (Hz) | Resultado |
+|:---:|:---:|:---:|
+| $400$ | $-350$ | $5\sin(-700\pi t) = -5\sin(700\pi t)$ |
+| $500$ | $-250$ | $5\sin(-500\pi t) = -5\sin(500\pi t)$ |
+| $600$ | $-150$ | $5\sin(-300\pi t) = -5\sin(300\pi t)$ |
+
+Señal reconstruida:
+
+$$
+y(t) = 4 - 5\sin(300\pi t) - 5\sin(500\pi t) - 5\sin(700\pi t)
+$$
+
+Frecuencias analógicas obtenidas: $0$, $150$, $250$ y $350\,\text{Hz}$.
+
+---
+
+## Problema 10
+
+Determina las componentes frecuenciales de la señal obtenida al muestrear la señal continua
+
+$$
+v(t) = 10\cos(500\pi t)\cdot\sin(400\pi t) \ \text{V}
+$$
+
+($t$ en s) con una frecuencia de muestreo de $500\,\text{Hz}$ reconstruyendo la señal discreta con una frecuencia de $1000\,\text{Hz}$. ¿Y si se usa una frecuencia de muestreo de $2000\,\text{Hz}$ y se reconstruye con $4000\,\text{Hz}$?
+
+### Solución
+
+Usando $\sin A \cos B = \tfrac{1}{2}\big[\sin(A+B) + \sin(A-B)\big]$ con $A = 400\pi t$, $B = 500\pi t$:
+
+$$
+v(t) = 5\sin(900\pi t) + 5\sin(-100\pi t) = 5\sin(900\pi t) - 5\sin(100\pi t)
+$$
+
+Componentes: $450\,\text{Hz}$ y $50\,\text{Hz}$.
+
+**Caso 1: $f_s = 500\,\text{Hz}$, reconstrucción con $f_r = 1000\,\text{Hz}$.**
+
+Frecuencias digitales: $F_1 = 450/500 = 0.9$ y $F_2 = 50/500 = 0.1$ ciclos/muestra.
+
+$$
+x[n] = 5\sin(2\pi\, 0.9\, n) - 5\sin(2\pi\, 0.1\, n)
+$$
+
+Como $0.9 > 0.5$, se repliega: $\sin(2\pi\, 0.9\, n) = \sin(2\pi(0.9 - 1)n) = -\sin(2\pi\, 0.1\, n)$. Por tanto:
+
+$$
+x[n] = -10\sin(2\pi\, 0.1\, n) = -10\sin(0.2\pi n)
+$$
+
+Al reconstruir con $f_r = 1000\,\text{Hz}$: $f = 0.1 \cdot 1000 = 100\,\text{Hz}$.
+
+$$
+y(t) = -10\sin(200\pi t)
+$$
+
+Una única componente de $100\,\text{Hz}$ y amplitud $10$.
+
+**Caso 2: $f_s = 2000\,\text{Hz}$, reconstrucción con $f_r = 4000\,\text{Hz}$.**
+
+Como $f_s = 2000 > 900\,\text{Hz}$, no hay aliasing. Frecuencias digitales: $F_1 = 450/2000 = 0.225$ y $F_2 = 50/2000 = 0.025$.
+
+$$
+x[n] = 5\sin(2\pi\, 0.225\, n) - 5\sin(2\pi\, 0.025\, n)
+$$
+
+Al reconstruir con $f_r = 4000\,\text{Hz}$: $0.225 \cdot 4000 = 900\,\text{Hz}$ y $0.025 \cdot 4000 = 100\,\text{Hz}$.
+
+$$
+y(t) = 5\sin(1800\pi t) - 5\sin(200\pi t)
+$$
+
+Componentes de $900\,\text{Hz}$ y $100\,\text{Hz}$: la forma de la señal se conserva, pero todas sus frecuencias quedan multiplicadas por $f_r/f_s = 2$.

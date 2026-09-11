@@ -2,7 +2,8 @@ project:
   type: website
   output-dir: _site
   render:
-    - "*.qmd"        # CONTENIDOS.md y TODO.md son notas internas, no páginas
+    - "*.qmd"              # CONTENIDOS.md y TODO.md son notas internas, no páginas
+    - "problemas/*.qmd"
 
 website:
   title: "Señales y Sistemas Lineales — Prácticas"
@@ -18,6 +19,12 @@ website:
         href: lab1.qmd
       - text: "Práctica 2 — Análisis en el dominio temporal"
         href: lab2.qmd
+      - section: "Problemas resueltos"
+        contents:
+          - text: "Señales y sistemas"
+            href: problemas/senales_sistemas.qmd
+          - text: "Muestreo, cuantización y aliasing"
+            href: problemas/problemas_muestreo.qmd
 
 # --- metadatos y ejecución compartidos por todos los labs ---
 lang: es
