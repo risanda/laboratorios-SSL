@@ -22,7 +22,6 @@ tikz-preamble: |
 
 - **Linealidad:** $T\{a x_1 + b x_2\} = a\,T\{x_1\} + b\,T\{x_2\}$. Condición necesaria: entrada nula $\Rightarrow$ salida nula.
 - **Invarianza en el tiempo (IVT):** si $x(t) \to y(t)$, entonces $x(t - t_0) \to y(t - t_0)$. Se comprueba comparando la respuesta a la entrada desplazada, $y_1(t)$, con la salida desplazada, $y(t - t_0)$.
-- **Estabilidad BIBO:** toda entrada acotada ($|x| \leq B_x$) produce una salida acotada ($|y| \leq B_y$).
 - **Paridad:** par si $x(-t) = x(t)$; impar si $x(-t) = -x(t)$ (implica $x(0) = 0$).
 - **Periodicidad:** $x(t + T) = x(t)$. Una suma de señales periódicas es periódica si el cociente de sus periodos es racional; el periodo es el mínimo común múltiplo.
 - **Energía:** $E = \displaystyle\int_{-\infty}^{\infty} |x(t)|^2\,dt$ o $E = \displaystyle\sum_{n=-\infty}^{\infty} |x[n]|^2$.
@@ -94,7 +93,7 @@ No coinciden: no es invariante. **No es LTI** (es un diezmado).
 
 ## Problema 3
 
-Determina si los siguientes sistemas son (i) lineales, (ii) invariantes en el tiempo, (iii) estables BIBO:
+Determina si los siguientes sistemas son (i) lineales y (ii) invariantes en el tiempo:
 
 a) $y[n] = x[n] + x[n-2]$  
 b) $y[n] = n\cdot x[n]$  
@@ -107,32 +106,28 @@ d) $y[n] = x[n] + 3$
 
 - Lineal: sí, es suma de versiones desplazadas de la entrada.
 - Invariante: $x_1[n] = x[n - n_0] \Rightarrow y_1[n] = x[n - n_0] + x[n - n_0 - 2] = y[n - n_0]$. Sí.
-- Estable: $|y[n]| \leq |x[n]| + |x[n-2]| \leq 2B_x$. Sí.
 
 **b)** $y[n] = n\,x[n]$
 
 - Lineal: $n\big(a x_1[n] + b x_2[n]\big) = a\,n x_1[n] + b\,n x_2[n]$. Sí.
 - Invariante: $y_1[n] = n\,x[n - n_0]$, pero $y[n - n_0] = (n - n_0)\,x[n - n_0]$. No.
-- Estable: con $x[n] = 1$ (acotada), $y[n] = n$, que no está acotada. No.
 
 **c)** $y[n] = x[n^2]$
 
 - Lineal: $a x_1[n^2] + b x_2[n^2]$. Sí.
 - Invariante: $y_1[n] = x_1[n^2] = x[n^2 - n_0]$, pero $y[n - n_0] = x\big[(n - n_0)^2\big]$. No.
-- Estable: $|y[n]| = |x[n^2]| \leq B_x$. Sí.
 
 **d)** $y[n] = x[n] + 3$
 
 - Lineal: $x[n] = 0 \Rightarrow y[n] = 3 \neq 0$. No.
 - Invariante: $y_1[n] = x[n - n_0] + 3 = y[n - n_0]$. Sí.
-- Estable: $|y[n]| \leq B_x + 3$. Sí.
 
-| Sistema | Lineal | Invariante | Estable BIBO |
-|:---|:---:|:---:|:---:|
-| $x[n] + x[n-2]$ | Sí | Sí | Sí |
-| $n\,x[n]$ | Sí | No | No |
-| $x[n^2]$ | Sí | No | Sí |
-| $x[n] + 3$ | No | Sí | Sí |
+| Sistema | Lineal | Invariante |
+|:---|:---:|:---:|
+| $x[n] + x[n-2]$ | Sí | Sí |
+| $n\,x[n]$ | Sí | No |
+| $x[n^2]$ | Sí | No |
+| $x[n] + 3$ | No | Sí |
 
 ---
 
