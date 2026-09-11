@@ -70,20 +70,24 @@ La solución total es la suma de la solución homogénea y una solución particu
 
 Resuelve las siguientes ecuaciones diferenciales con condiciones iniciales $y(0) = 1$, $y'(0) = 0$:
 
-a) $y''(t) + 3y'(t) + 2y(t) = 0$
+**a)** $y''(t) + 3y'(t) + 2y(t) = 0$
 
-b) $y''(t) + 4y'(t) + 4y(t) = 0$
+**b)** $y''(t) + 4y'(t) + 4y(t) = 0$
 
 ### Solución
 
-**a)** Ecuación característica: $\lambda^2 + 3\lambda + 2 = 0 \;\Rightarrow\; \lambda_1 = -1,\ \lambda_2 = -2$ (reales distintas).
+**a)** Ecuación característica: 
+$$\lambda^2 + 3\lambda + 2 = 0 \;\Rightarrow\; \lambda_1 = -1,\ \lambda_2 = -2$$
 
+Las raíces son reales y distintas, así que sabemos que la solución homogénea es de la forma:
 $$
 y(t) = A\,e^{-t} + B\,e^{-2t}
-\qquad
+$$
+Calculamos su derivada para poder usar las condiciones iniciales:
+$$
 y'(t) = -A\,e^{-t} - 2B\,e^{-2t}
 $$
-
+Usando las condiciones iniciales $y(0) = 1$, $y'(0) = 0$ y las ecuaciones anteriores, obtenemos un sistema de dos ecuaciones con dos incógnitas, fácil de resolver:
 $$
 \begin{cases}
 y(0) = A + B = 1 \\
@@ -91,10 +95,11 @@ y'(0) = -A - 2B = 0
 \end{cases}
 \;\Rightarrow\; A = 2,\ B = -1
 $$
-
+Por tanto, la solución final es
 $$
 y(t) = 2e^{-t} - e^{-2t}, \quad t \geq 0
 $$
+No hay solución particular porque la ecuación es homogénea.
 
 **b)** Ecuación característica: $\lambda^2 + 4\lambda + 4 = (\lambda + 2)^2 = 0 \;\Rightarrow\; \lambda = -2$ (doble).
 
@@ -120,9 +125,9 @@ $$
 
 Resuelve las siguientes ecuaciones en diferencias:
 
-a) $y(n) = 0.75\,y(n-1) - 0.125\,y(n-2)$, con $y(-1) = 1$, $y(-2) = 0$
+**a)** $y(n) = 0.75\,y(n-1) - 0.125\,y(n-2)$, con $y(-1) = 1$, $y(-2) = 0$
 
-b) $y(n) = y(n-1) - 0.25\,y(n-2)$, con $y(0) = 1$, $y(1) = 0$
+**b)** $y(n) = y(n-1) - 0.25\,y(n-2)$, con $y(0) = 1$, $y(1) = 0$
 
 ### Solución
 
@@ -132,8 +137,11 @@ $$
 z^2 - 0.75z + 0.125 = 0 \;\Rightarrow\; z_1 = 0.5,\ z_2 = 0.25
 $$
 
-Como la ecuación es homogénea, la solución $y(n) = A(0.5)^n + B(0.25)^n$ vale también para $n$ negativos, y se pueden usar directamente las condiciones dadas:
-
+Como las raíces son reales, sabemos que la solución homogénea es de la forma:
+$$
+y(n) = A(0.5)^n + B(0.25)^n
+$$
+Evaluando dicha solución candidata en los instantes $n = -1$ y $n = -2$ para poder usar las condiciones iniciales, obtenemos un sistema de dos ecuaciones con dos incógnitas:
 $$
 \begin{cases}
 y(-1) = 2A + 4B = 1 \\
@@ -141,25 +149,30 @@ y(-2) = 4A + 16B = 0
 \end{cases}
 \;\Rightarrow\; A = 1,\ B = -\tfrac{1}{4}
 $$
-
+Tras resolver el sistema, sabemos que la solución final es:
 $$
 y(n) = (0.5)^n - \tfrac{1}{4}(0.25)^n = (0.5)^n - (0.25)^{n+1}
 $$
 
-Comprobación: iterando, $y(0) = 0.75\cdot 1 - 0.125\cdot 0 = 0.75$, y la fórmula da $1 - 0.25 = 0.75$.
+**b)** Reescrita como $y(n) - y(n-1) + 0.25\,y(n-2) = 0$, su ecuación característica es
 
-**b)** Ecuación característica: $z^2 - z + 0.25 = (z - 0.5)^2 = 0 \;\Rightarrow\; z = 0.5$ (doble).
+$$
+z^2 - z + 0.25 = (z - 0.5)^2 = 0 \;\Rightarrow\; z = 0.5 \ \text{(doble)}
+$$
 
+Como la raíz es doble, no disponemos de dos potencias distintas con las que formar la solución: la segunda se obtiene multiplicando la primera por $n$. Sabemos entonces que la solución homogénea es de la forma:
 $$
 y(n) = (A + B\,n)(0.5)^n
 $$
-
+Evaluando dicha solución candidata en los instantes $n = 0$ y $n = 1$, que es donde nos dan las condiciones iniciales, obtenemos un sistema de dos ecuaciones con dos incógnitas:
 $$
-y(0) = A = 1
-\qquad
-y(1) = (1 + B)\cdot 0.5 = 0 \;\Rightarrow\; B = -1
+\begin{cases}
+y(0) = A = 1 \\
+y(1) = (A + B)\cdot 0.5 = 0
+\end{cases}
+\;\Rightarrow\; A = 1,\ B = -1
 $$
-
+Tras resolver el sistema, sabemos que la solución final es:
 $$
 y(n) = (1 - n)(0.5)^n
 $$
