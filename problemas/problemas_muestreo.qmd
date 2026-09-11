@@ -22,6 +22,81 @@ format:
 - Frecuencia aparente tras muestrear a $f_s$: $f_a = f - k f_s$, eligiendo $k$ entero tal que $|f_a| \leq f_s/2$. Si $f_a < 0$, un seno cambia de signo ($\sin(-x) = -\sin x$) y un coseno no.
 - Frecuencia digital: $F = f/f_s$ (ciclos/muestra). Al reconstruir con $f_r$: $f_{\text{salida}} = F \cdot f_r$.
 
+### Identidades trigonométricas
+
+Varias señales no vienen dadas como suma de senoides puras, sino como productos
+o potencias. Hay que descomponerlas primero, porque solo entonces se ven sus
+componentes frecuenciales y se puede aplicar el criterio de Nyquist.
+
+**Productos a sumas**, para señales dadas como producto de dos senoides:
+
+$$
+\cos A \cos B = \tfrac{1}{2}\big[\cos(A-B) + \cos(A+B)\big]
+$$
+$$
+\sin A \sin B = \tfrac{1}{2}\big[\cos(A-B) - \cos(A+B)\big]
+$$
+$$
+\sin A \cos B = \tfrac{1}{2}\big[\sin(A+B) + \sin(A-B)\big]
+$$
+
+**Potencias**, para señales elevadas al cuadrado o al cubo:
+
+$$
+\cos^2 x = \frac{1 + \cos 2x}{2}
+\qquad
+\sin^2 x = \frac{1 - \cos 2x}{2}
+$$
+$$
+\cos^3 x = \frac{3\cos x + \cos 3x}{4}
+\qquad
+\sin^3 x = \frac{3\sin x - \sin 3x}{4}
+$$
+
+**Simetría y desfase**, para llevar una frecuencia aparente negativa al intervalo
+$[0, f_s/2]$ y para pasar de seno a coseno:
+
+$$
+\cos(-x) = \cos x
+\qquad
+\sin(-x) = -\sin x
+$$
+$$
+\cos\!\left(x - \tfrac{\pi}{2}\right) = \sin x
+\qquad
+\sin\!\left(x + \tfrac{\pi}{2}\right) = \cos x
+$$
+
+**Periodicidad**, con $k$ entero:
+
+$$
+\cos(x + 2\pi k) = \cos x
+\qquad
+\sin(x + 2\pi k) = \sin x
+$$
+
+**Valores en los instantes de muestreo**, con $n$ entero. Son los que hacen que
+una componente desaparezca, se vuelva continua o alterne de signo:
+
+$$
+\cos(2\pi n) = 1
+\qquad
+\sin(\pi n) = 0
+\qquad
+\cos(\pi n) = (-1)^n
+$$
+
+Y la consecuencia más útil de todas, la que explica el plegado de frecuencias:
+sumar o restar un entero a la frecuencia digital $F$ no cambia las muestras,
+
+$$
+\cos\big(2\pi (F \pm 1) n\big) = \cos(2\pi F n)
+\qquad
+\sin\big(2\pi (F \pm 1) n\big) = \sin(2\pi F n)
+$$
+
+porque el desfase añadido, $2\pi n$, es un múltiplo entero de la vuelta completa.
+
 ---
 
 ## Problema 1
